@@ -1,0 +1,177 @@
+--------------------------------------------------------
+--  DDL for Procedure EXCEPTIONFINALSTATUSTYPE_MAIN
+--------------------------------------------------------
+set define off;
+
+  CREATE OR REPLACE EDITIONABLE PROCEDURE "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" 
+AS
+   -- SET NOCOUNT ON added to prevent extra result sets from
+   -- interfering with SELECT statements.
+   v_VEFFECTIVETO NUMBER(10,0);
+   ---------------------------------------------------------------------------------------------------------------
+   -------Expire the records
+   --UPDATE AA
+   --SET 
+   -- EffectiveToTimeKey = @vEffectiveto,
+   -- DateModified=CONVERT(DATE,GETDATE(),103),
+   -- ModifyBy='SSISUSER' 
+   --FROM DBO.ExceptionFinalStatusType AA
+   --WHERE AA.EffectiveToTimeKey = 49999
+   --AND NOT EXISTS (SELECT 1 FROM [RBL_TEMPDB].[dbo].[Temp_ExceptionFinalStatusTypeData] BB
+   --    WHERE AA.AccountEntityID=BB.AccountEntityID And AA.SourceAlt_Key=BB.SourceAlt_Key  and AA.StatusType=BB.StatusType
+   --    AND BB.EffectiveToTimeKey =49999
+   --    )
+   -------------------------------
+   /*  New Customers Ac Key ID Update  */
+   v_Ac_Key NUMBER(19,0) := 0;
+-- Add the parameters for the stored procedure here
+
+BEGIN
+
+   SELECT TIMEKEY - 1 
+
+     INTO v_VEFFECTIVETO
+     FROM RBL_MISDB_PROD.Automate_Advances 
+    WHERE  EXT_FLG = 'Y';
+   ----------For New Records
+   MERGE INTO RBL_TEMPDB.Temp_ExceptionFinalStatusTypeData A 
+   USING (SELECT A.ROWID row_id, 'N'
+   FROM RBL_TEMPDB.Temp_ExceptionFinalStatusTypeData A 
+    WHERE NOT EXISTS ( SELECT 1 
+                       FROM RBL_MISDB_PROD.ExceptionFinalStatusType B
+                        WHERE  B.EffectiveToTimeKey = 49999
+                                 AND A.CustomerACID = B.ACID
+                                 AND A.SourceAlt_Key = B.SourceAlt_Key
+                                 AND A.StatusType = B.StatusType )) src
+   ON ( A.ROWID = src.row_id )
+   WHEN MATCHED THEN UPDATE SET A.IsChanged
+                                ----Select * 
+                                 = 'N';
+   MERGE INTO RBL_MISDB_PROD.ExceptionFinalStatusType O
+   USING (SELECT O.ROWID row_id, v_vEffectiveto, UTILS.CONVERT_TO_VARCHAR2(SYSDATE,200,p_style=>103) AS pos_3, 'SSISUSER'
+   FROM RBL_MISDB_PROD.ExceptionFinalStatusType O
+          JOIN RBL_TEMPDB.Temp_ExceptionFinalStatusTypeData T   ON O.ACID = T.CustomerACID
+          AND O.SourceAlt_Key = T.SourceAlt_Key
+          AND O.StatusType = T.StatusType
+          AND O.EffectiveToTimeKey = 49999
+          AND T.EffectiveToTimeKey = 49999 
+    WHERE ( NVL(O.Amount, 0) <> NVL(T.Amount, 0)
+     OR NVL(O.StatusDate, '1999-01-01') <> NVL(T.StatusDate, '1999-01-01') )) src
+   ON ( O.ROWID = src.row_id )
+   WHEN MATCHED THEN UPDATE SET O.EffectiveToTimeKey = v_vEffectiveto,
+                                O.DateModified = pos_3,
+                                O.ModifyBy = 'SSISUSER';
+   ----------For Changes Records
+   MERGE INTO RBL_TEMPDB.Temp_ExceptionFinalStatusTypeData A
+   USING (SELECT A.ROWID row_id, 'C'
+   FROM RBL_TEMPDB.Temp_ExceptionFinalStatusTypeData A
+          JOIN RBL_MISDB_PROD.ExceptionFinalStatusType B   ON B.ACID = A.CustomerACID
+          AND A.SourceAlt_Key = B.SourceAlt_Key
+          AND A.StatusType = B.StatusType 
+    WHERE B.EffectiveToTimeKey = v_vEffectiveto) src
+   ON ( A.ROWID = src.row_id )
+   WHEN MATCHED THEN UPDATE SET A.IsChanged
+                                ----Select * 
+                                 = 'C';
+   SELECT MAX(Entity_Key)  
+
+     INTO v_Ac_Key
+     FROM RBL_MISDB_PROD.ExceptionFinalStatusType ;
+   IF v_Ac_Key IS NULL THEN
+
+   BEGIN
+      v_Ac_Key := 0 ;
+
+   END;
+   END IF;
+   MERGE INTO RBL_TEMPDB.Temp_ExceptionFinalStatusTypeData TEMP
+   USING (SELECT TEMP.ROWID row_id, ACCT.Entity_Key
+   FROM RBL_TEMPDB.Temp_ExceptionFinalStatusTypeData TEMP
+          JOIN ( SELECT "TEMP_EXCEPTIONFINALSTATUSTYPEDATA".CustomerAcId ,
+                        "TEMP_EXCEPTIONFINALSTATUSTYPEDATA".SourceAlt_Key ,
+                        "TEMP_EXCEPTIONFINALSTATUSTYPEDATA".StatusType ,
+                        (v_Ac_Key + ROW_NUMBER() OVER ( ORDER BY ( SELECT 1 
+                                                                     FROM DUAL  )  )) Entity_Key  
+                 FROM RBL_TEMPDB.Temp_ExceptionFinalStatusTypeData 
+                  WHERE  "TEMP_EXCEPTIONFINALSTATUSTYPEDATA".Entity_Key = 0
+                           OR "TEMP_EXCEPTIONFINALSTATUSTYPEDATA".Entity_Key IS NULL ) ACCT   ON TEMP.CustomerAcId = ACCT.CustomerAcId 
+    WHERE Temp.IsChanged IN ( 'N','C' )
+   ) src
+   ON ( TEMP.ROWID = src.row_id )
+   WHEN MATCHED THEN UPDATE SET TEMP.Entity_Key = src.Entity_Key;
+   /***************************************************************************************************************/
+   /***************************************************************************************************************/
+   INSERT INTO RBL_MISDB_PROD.ExceptionFinalStatusType
+   --[Entity_Key],
+
+     ( SourceAlt_Key, CustomerID, ACID, StatusType, StatusDate, Amount, AuthorisationStatus, EffectiveFromTimeKey, EffectiveToTimeKey, CreatedBy, DateCreated, ModifyBy, DateModified, ApprovedBy, DateApproved, AccountEntityID )
+     ( SELECT SourceAlt_Key ,
+              CustomerID ,
+              CustomerACID ,
+              StatusType ,
+              StatusDate ,
+              Amount ,
+              'A' ,
+              EffectiveFromTimeKey ,
+              EffectiveToTimeKey ,
+              'SSIS USER' ,
+              SYSDATE ,
+              NULL ,
+              NULL ,
+              NULL ,
+              NULL ,
+              AccountEntityId 
+       FROM RBL_TEMPDB.Temp_ExceptionFinalStatusTypeData T
+        WHERE  NVL(T.IsChanged, 'U') IN ( 'N','C' )
+      );
+
+EXCEPTION WHEN NO_DATA_FOUND THEN DBMS_OUTPUT.PUT_LINE('NO DATA FOUND');
+            WHEN OTHERS THEN utils.handleerror(SQLCODE,SQLERRM);
+END;
+
+/
+
+  GRANT EXECUTE ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "ROLE_LOCAL_RBL_MISDB_PROD_ORACLE";
+  GRANT EXECUTE ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "QPI_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "ALERT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "DWH_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "MAIN_PRO";
+  GRANT EXECUTE ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "BS_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "ACL_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "RBL_MISDB_PROD";
+  GRANT EXECUTE ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT DEBUG ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "ROLE_LOCAL_RBL_MISDB_PROD_ORACLE";
+  GRANT DEBUG ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT DEBUG ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "QPI_RBL_MISDB_PROD";
+  GRANT DEBUG ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "ALERT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "DWH_RBL_MISDB_PROD";
+  GRANT DEBUG ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "MAIN_PRO";
+  GRANT DEBUG ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT DEBUG ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "BS_RBL_MISDB_PROD";
+  GRANT DEBUG ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "ACL_RBL_MISDB_PROD";
+  GRANT DEBUG ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "RBL_MISDB_PROD";
+  GRANT DEBUG ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "ROLE_ALL_DB";
+  GRANT EXECUTE ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "CC_CDR_RBL_STGDB";
+  GRANT EXECUTE ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "RBL_BI_RBL_STGDB";
+  GRANT EXECUTE ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "BSG_READ_RBL_STGDB";
+  GRANT EXECUTE ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "STD_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "RBL_STGDB";
+  GRANT EXECUTE ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "ETL_TEMP_RBL_TEMPDB";
+  GRANT EXECUTE ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "RBL_TEMPDB";
+  GRANT EXECUTE ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "STG_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "ADF_CDR_RBL_STGDB";
+  GRANT DEBUG ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "ROLE_ALL_DB";
+  GRANT DEBUG ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "CC_CDR_RBL_STGDB";
+  GRANT DEBUG ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "RBL_BI_RBL_STGDB";
+  GRANT DEBUG ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "BSG_READ_RBL_STGDB";
+  GRANT DEBUG ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "STD_FIN_RBL_STGDB";
+  GRANT DEBUG ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "RBL_STGDB";
+  GRANT DEBUG ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "ETL_TEMP_RBL_TEMPDB";
+  GRANT DEBUG ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "RBL_TEMPDB";
+  GRANT DEBUG ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "STG_FIN_RBL_STGDB";
+  GRANT DEBUG ON "ETL_MAIN_RBL_MISDB_PROD"."EXCEPTIONFINALSTATUSTYPE_MAIN" TO "ADF_CDR_RBL_STGDB";

@@ -1,0 +1,7 @@
+--------------------------------------------------------
+--  DDL for Index PK__ADVCUSTC__03D131BCAF6FDDCB
+--------------------------------------------------------
+
+  CREATE UNIQUE INDEX "PREMOC_RBL_MISDB_PROD"."PK__ADVCUSTC__03D131BCAF6FDDCB" ON "PREMOC_RBL_MISDB_PROD"."ADVCUSTCAL" ("ENTITYKEY") 
+  PCTFREE 10 INITRANS 2 MAXTRANS 255 COMPUTE STATISTICS 
+  TABLESPACE "USERS" ;

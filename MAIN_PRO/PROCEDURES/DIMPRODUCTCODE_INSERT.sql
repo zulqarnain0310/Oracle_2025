@@ -1,0 +1,205 @@
+--------------------------------------------------------
+--  DDL for Procedure DIMPRODUCTCODE_INSERT
+--------------------------------------------------------
+set define off;
+
+  CREATE OR REPLACE EDITIONABLE PROCEDURE "MAIN_PRO"."DIMPRODUCTCODE_INSERT" /*==============================================
+ AUTHER : TRILOKI SHANKER KHANNA
+ CREATE DATE : 15-01-2020
+ MODIFY DATE : 15-01-2020
+ DESCRIPTION : INSERT DATA FOR ProductCode
+ --EXEC PRO.DimProductCode_INSERT
+ ================================================*/
+--BEGIN
+ --/*-------INSERT DATA FOR Profile---------------------------------*/
+ --IF OBJECT_ID('TEMPDB..#NEWProductCodeProfile') IS NOT NULL
+ --   DROP TABLE #NEWProductCodeProfile
+ --DECLARE  @vEffectivefrom  Int SET @vEffectiveFrom=(SELECT TimeKey FROM [dbo].Automate_Advances WHERE EXT_FLG='Y')
+ --DECLARE @TimeKey  Int SET @TimeKey=(SELECT TimeKey FROM [dbo].Automate_Advances WHERE EXT_FLG='Y')
+ --DECLARE @DATE AS DATE =(SELECT Date FROM [dbo].Automate_Advances WHERE EXT_FLG='Y')
+ --DECLARE @ProductAlt_Key INT=0 
+ --SELECT @ProductAlt_Key=MAX(ProductAlt_Key) FROM  [dbo].[DimProduct] 
+ --   SELECT DISTINCT TYPE ProductCode INTO #NEWProductCodeProfile  FROM dbo.LNDAILYFULL
+ --   EXCEPT
+ --   SELECT ProductCode FROM DBO.DimProduct WHERE SourceAlt_Key=1 AND EffectiveToTimeKey=49999
+ --   INSERT INTO DimProduct
+ --   (
+ -- ProductAlt_Key
+ --,ProductCode
+ --,ProductName
+ --,ProductShortName
+ --,ProductShortNameEnum
+ --,ProductGroup
+ --,ProductSubGroup
+ --,ProductSegment
+ --,ProductValidCode
+ --,SrcSysProductCode
+ --,SrcSysProductName
+ --,DestSysProductCode
+ --,AuthorisationStatus
+ --,EffectiveFromTimeKey
+ ----,EffectiveFromDate
+ --,EffectiveToTimeKey
+ --,CreatedBy
+ --,DateCreated
+ --,ModifiedBy
+ --,DateModifie
+ --,ApprovedBy
+ --,DateApproved
+ --,D2Ktimestamp
+ --,DepositType
+ --,SourceAlt_Key
+ --   )
+ --SELECT 
+ --@ProductAlt_Key + ROW_NUMBER()OVER(ORDER BY (SELECT 1)) AS  ProductAlt_Key
+ --,A.ProductCode AS ProductCode
+ --,NULL AS ProductName
+ --,NULL AS ProductShortName
+ --,NULL AS ProductShortNameEnum
+ --,'UNSECURED' AS ProductGroup
+ --,NULL AS ProductSubGroup
+ --,NULL AS ProductSegment
+ --,NULL AS ProductValidCode
+ --,NULL AS SrcSysProductCode
+ --,NULL AS SrcSysProductName
+ --,NULL AS DestSysProductCode
+ --,NULL AS AuthorisationStatus
+ --,EffectiveFromTimeKey=(SELECT TimeKey FROM [dbo].Automate_Advances WHERE EXT_FLG='Y')
+ ----,EffectiveFromDate = (SELECT TimeKey FROM [dbo].Automate_Advances WHERE EXT_FLG='Y')
+ --,EffectiveToTimeKey=49999
+ --,CreatedBy='SSISUSER'
+ --,DateCreated=GETDATE()
+ --,ModifiedBy=NULL
+ --,DateModifie=NULL
+ --,ApprovedBy=NULL
+ --,DateApproved=NULL
+ --,D2Ktimestamp=NULL
+ --,DepositType=NULL
+ --,SourceAlt_Key=1
+ --FROM #NEWProductCodeProfile A
+ --ORDER BY A.ProductCode
+ --/*-------INSERT DATA FOR BR NET---------------------------------*/
+ --IF OBJECT_ID('TEMPDB..#NEWProductCodeBRNET') IS NOT NULL
+ --   DROP TABLE #NEWProductCodeBRNET
+ --   SELECT DISTINCT PRODUCTID PRODUCTCODE INTO #NEWPRODUCTCODEBRNET   FROM  DBO.T_LOAN TL
+ --			INNER JOIN DBO.T_ACCOUNTCUSTOMER  TAC	ON TL.ACCOUNTID=TAC.ACCOUNTID	AND TL.OURBRANCHID=TAC.OURBRANCHID
+ --			INNER  JOIN  DBO.T_GLINTERFACE ON DBO.T_GLINTERFACE.RELEVANTID=TAC.PRODUCTID
+ --			INNER  JOIN  DBO.T_SMF_GLMAPPING ON DBO.T_SMF_GLMAPPING.GLID=DBO.T_GLINTERFACE.ACCOUNTID
+ --			WHERE TL.LOANSTATUSID IN('A','N','W')AND  ACCOUNTTAGID   ='CONTROL_AC'
+ --   EXCEPT
+ --   SELECT PRODUCTCODE FROM DBO.DIMPRODUCT WHERE SOURCEALT_KEY=2 AND EFFECTIVETOTIMEKEY=49999
+ --   DECLARE @ProductAlt_Keybrnet INT=0 
+ --  SELECT @ProductAlt_Keybrnet=MAX(ProductAlt_Key) FROM  [dbo].[DimProduct] 
+ --   INSERT INTO DimProduct
+ --   (
+ -- ProductAlt_Key
+ --,ProductCode
+ --,ProductName
+ --,ProductShortName
+ --,ProductShortNameEnum
+ --,ProductGroup
+ --,ProductSubGroup
+ --,ProductSegment
+ --,ProductValidCode
+ --,SrcSysProductCode
+ --,SrcSysProductName
+ --,DestSysProductCode
+ --,AuthorisationStatus
+ --,EffectiveFromTimeKey
+ ----,EffectiveFromDate
+ --,EffectiveToTimeKey
+ --,CreatedBy
+ --,DateCreated
+ --,ModifiedBy
+ --,DateModifie
+ --,ApprovedBy
+ --,DateApproved
+ --,D2Ktimestamp
+ --,DepositType
+ --,SourceAlt_Key
+ --   )
+ --SELECT 
+ --@ProductAlt_Keybrnet + ROW_NUMBER()OVER(ORDER BY (SELECT 1)) AS  ProductAlt_Key
+ --,A.ProductCode AS ProductCode
+ --,NULL AS ProductName
+ --,NULL AS ProductShortName
+ --,NULL AS ProductShortNameEnum
+ --,'UNSECURED'  AS ProductGroup
+ --,NULL AS ProductSubGroup
+ --,NULL AS ProductSegment
+ --,NULL AS ProductValidCode
+ --,NULL AS SrcSysProductCode
+ --,NULL AS SrcSysProductName
+ --,NULL AS DestSysProductCode
+ --,NULL AS AuthorisationStatus
+ --,EffectiveFromTimeKey=(SELECT TimeKey FROM [dbo].Automate_Advances WHERE EXT_FLG='Y')
+ ----,EffectiveFromDate = (SELECT TimeKey FROM [dbo].Automate_Advances WHERE EXT_FLG='Y')
+ --,EffectiveToTimeKey=49999
+ --,CreatedBy='SSISUSER'
+ --,DateCreated=GETDATE()
+ --,ModifiedBy=NULL
+ --,DateModifie=NULL
+ --,ApprovedBy=NULL
+ --,DateApproved=NULL
+ --,D2Ktimestamp=NULL
+ --,DepositType=NULL
+ --,SourceAlt_Key=2
+ --FROM #NEWProductCodeBRNET A
+ --ORDER BY A.ProductCode
+ --END
+
+AS
+
+BEGIN
+
+   NULL;
+
+EXCEPTION WHEN OTHERS THEN utils.handleerror(SQLCODE,SQLERRM);
+END;
+
+/
+
+  GRANT EXECUTE ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "ROLE_LOCAL_RBL_MISDB_PROD_ORACLE";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "QPI_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "ALERT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "DWH_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "BS_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "ACL_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "RBL_MISDB_PROD";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT DEBUG ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "ROLE_LOCAL_RBL_MISDB_PROD_ORACLE";
+  GRANT DEBUG ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT DEBUG ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "QPI_RBL_MISDB_PROD";
+  GRANT DEBUG ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "ALERT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "DWH_RBL_MISDB_PROD";
+  GRANT DEBUG ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT DEBUG ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "BS_RBL_MISDB_PROD";
+  GRANT DEBUG ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "ACL_RBL_MISDB_PROD";
+  GRANT DEBUG ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT DEBUG ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "RBL_MISDB_PROD";
+  GRANT DEBUG ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "ROLE_ALL_DB";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "CC_CDR_RBL_STGDB";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "RBL_BI_RBL_STGDB";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "BSG_READ_RBL_STGDB";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "STD_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "RBL_STGDB";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "ETL_TEMP_RBL_TEMPDB";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "RBL_TEMPDB";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "STG_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "ADF_CDR_RBL_STGDB";
+  GRANT DEBUG ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "ROLE_ALL_DB";
+  GRANT DEBUG ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "CC_CDR_RBL_STGDB";
+  GRANT DEBUG ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "RBL_BI_RBL_STGDB";
+  GRANT DEBUG ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "BSG_READ_RBL_STGDB";
+  GRANT DEBUG ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "STD_FIN_RBL_STGDB";
+  GRANT DEBUG ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "RBL_STGDB";
+  GRANT DEBUG ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "ETL_TEMP_RBL_TEMPDB";
+  GRANT DEBUG ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "RBL_TEMPDB";
+  GRANT DEBUG ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "STG_FIN_RBL_STGDB";
+  GRANT DEBUG ON "MAIN_PRO"."DIMPRODUCTCODE_INSERT" TO "ADF_CDR_RBL_STGDB";

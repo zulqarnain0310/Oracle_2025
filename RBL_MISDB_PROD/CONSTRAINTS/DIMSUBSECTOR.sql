@@ -1,0 +1,7 @@
+--------------------------------------------------------
+--  Constraints for Table DIMSUBSECTOR
+--------------------------------------------------------
+
+  ALTER TABLE "RBL_MISDB_PROD"."DIMSUBSECTOR" MODIFY ("SUBSECTOR_KEY" NOT NULL ENABLE);
+  ALTER TABLE "RBL_MISDB_PROD"."DIMSUBSECTOR" MODIFY ("SUBSECTORALT_KEY" NOT NULL ENABLE);
+  ALTER TABLE "RBL_MISDB_PROD"."DIMSUBSECTOR" MODIFY ("D2KTIMESTAMP" NOT NULL ENABLE);

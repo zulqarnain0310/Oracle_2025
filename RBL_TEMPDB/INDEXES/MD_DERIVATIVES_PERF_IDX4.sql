@@ -1,0 +1,7 @@
+--------------------------------------------------------
+--  DDL for Index MD_DERIVATIVES_PERF_IDX4
+--------------------------------------------------------
+
+  CREATE INDEX "RBL_TEMPDB"."MD_DERIVATIVES_PERF_IDX4" ON "RBL_TEMPDB"."MD_DERIVATIVES" ("DERIVED_ID", "DERIVED_TYPE", "DERIVED_CONNECTION_ID_FK") 
+  PCTFREE 10 INITRANS 2 MAXTRANS 165 COMPUTE STATISTICS 
+  TABLESPACE "USERS" ;

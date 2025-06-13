@@ -1,0 +1,6 @@
+--------------------------------------------------------
+--  Constraints for Table ADVACRESTRUCTURECAL_HIST_BACKUP_ALL_NEW
+--------------------------------------------------------
+
+  ALTER TABLE "MAIN_PRO"."ADVACRESTRUCTURECAL_HIST_BACKUP_ALL_NEW" MODIFY ("ENTITYKEY" NOT NULL ENABLE);
+  ALTER TABLE "MAIN_PRO"."ADVACRESTRUCTURECAL_HIST_BACKUP_ALL_NEW" MODIFY ("D2KTIMESTAMP" NOT NULL ENABLE);

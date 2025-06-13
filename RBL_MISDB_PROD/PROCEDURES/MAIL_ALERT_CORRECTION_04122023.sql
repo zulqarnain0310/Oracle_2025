@@ -1,0 +1,69 @@
+--------------------------------------------------------
+--  DDL for Procedure MAIL_ALERT_CORRECTION_04122023
+--------------------------------------------------------
+set define off;
+
+  CREATE OR REPLACE EDITIONABLE PROCEDURE "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" 
+AS
+
+BEGIN
+
+   UPDATE AlertRecipient
+      SET RecipientEmailIDs = 'MohdFarhan.Ansari@rblbank.com,Sagar.Gaikwad2@rblbank.com,Kiran.Kumar@rblbank.com,Tushar.Patel@rblbank.com,Prachi.Katkar@rblbank.com,Ridhi.Shukla@rblbank.com,Jinal.Malde@rblbank.com,Ravi.Paul@rblbank.com,Abhinay.Asgaonkar@rblbank.com,Nikhil.Iyer2@rblbank.com,Amol.Parab@rblbank.com,Santosh.Kumar4@rblbank.com,Amol.Shinde@rblbank.com,Rajesh.Rao@rblbank.com,Kiran.Shejwal@rblbank.com,Srikanth.Bhaskarabhatta@rblbank.com,Amit.Pandit@rblbank.com,Vikrant.Roday@rblbank.com,Vijay.Avati2@rblbank.com,Robin.Daniel@rblbank.com,Rashmi.Shinde2@rblbank.com,Sreekanth.Narayana@rblbank.com,Neha.Dixit@rblbank.com,rbl.calypsosupport@rblbank.com,Vinit.Kadam@rblbank.com,Ralph.Vanbuerle@rblbank.com,Priyanka.Barai@rblbank.com,Ashish.Raul@rblbank.com,Nimish.Chindarkar@rblbank.com,Amit.Goel@rblbank.com,Vikram.Samant@rblbank.com,Raghuveer.Shanbhag@rblbank.com,Sunandita.Kanjilal@rblbank.com,Prashant1@rblbank.com,vivek4@rblbank.com,Priyanka.Patil@rblbank.com,vinod.patil1@rblbank.com,mallika.iyer@rblbank.com,dilip.dumbhare@rblbank.com,Pulkit.Dekhane@rblbank.com,Vijay.Rathod@rblbank.com,Tejesh.Pujari2@rblbank.com
+          MohdFarhan.Ansari@rblbank.com,Sagar.Gaikwad2@rblbank.com,Kiran.Kumar@rblbank.com,Tushar.Patel@rblbank.com,Prachi.Katkar@rblbank.com,Ridhi.Shukla@rblbank.com,Jinal.Malde@rblbank.com,Ravi.Paul@rblbank.com,Abhinay.Asgaonkar@rblbank.com,Nikhil.Iyer2@rblbank.com,Amol.Parab@rblbank.com,Santosh.Kumar4@rblbank.com,Amol.Shinde@rblbank.com,Rajesh.Rao@rblbank.com,Kiran.Shejwal@rblbank.com,Srikanth.Bhaskarabhatta@rblbank.com,Amit.Pandit@rblbank.com,Vikrant.Roday@rblbank.com,Vijay.Avati2@rblbank.com,Robin.Daniel@rblbank.com,Rashmi.Shinde2@rblbank.com,Sreekanth.Narayana@rblbank.com,Neha.Dixit@rblbank.com,rbl.calypsosupport@rblbank.com,Vinit.Kadam@rblbank.com,Ralph.Vanbuerle@rblbank.com,Priyanka.Barai@rblbank.com,Ashish.Raul@rblbank.com,Nimish.Chindarkar@rblbank.com,Amit.Goel@rblbank.com,Vikram.Samant@rblbank.com,Raghuveer.Shanbhag@rblbank.com,Sunandita.Kanjilal@rblbank.com,Prashant1@rblbank.com,vivek4@rblbank.com,Priyanka.Patil@rblbank.com,vinod.patil1@rblbank.com,mallika.iyer@rblbank.com,dilip.dumbhare@rblbank.com,Pulkit.Dekhane@rblbank.com,Vijay.Rathod@rblbank.com,Tejesh.Pujari2@rblbank.com,CRisMACENPAProjectTeam@rblbank.com'
+    WHERE  AlertId = 4;
+   DELETE FROM AlertRecipient_28062022;
+   UTILS.IDENTITY_RESET('AlertRecipient_28062022');
+
+   INSERT INTO AlertRecipient_28062022 SELECT * 
+        FROM AlertRecipient ;
+
+EXCEPTION WHEN OTHERS THEN utils.handleerror(SQLCODE,SQLERRM);
+END;
+
+/
+
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "ROLE_LOCAL_RBL_MISDB_PROD_ORACLE";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "QPI_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "ALERT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "DWH_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "MAIN_PRO";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "BS_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "ACL_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "ROLE_LOCAL_RBL_MISDB_PROD_ORACLE";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "QPI_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "ALERT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "DWH_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "MAIN_PRO";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "BS_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "ACL_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "ROLE_ALL_DB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "CC_CDR_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "RBL_BI_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "BSG_READ_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "STD_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "ETL_TEMP_RBL_TEMPDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "RBL_TEMPDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "STG_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "ADF_CDR_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "ROLE_ALL_DB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "CC_CDR_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "RBL_BI_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "BSG_READ_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "STD_FIN_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "ETL_TEMP_RBL_TEMPDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "RBL_TEMPDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "STG_FIN_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."MAIL_ALERT_CORRECTION_04122023" TO "ADF_CDR_RBL_STGDB";

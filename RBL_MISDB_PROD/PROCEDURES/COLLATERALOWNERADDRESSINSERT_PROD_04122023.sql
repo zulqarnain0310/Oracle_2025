@@ -1,0 +1,180 @@
+--------------------------------------------------------
+--  DDL for Procedure COLLATERALOWNERADDRESSINSERT_PROD_04122023
+--------------------------------------------------------
+set define off;
+
+  CREATE OR REPLACE EDITIONABLE PROCEDURE "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" 
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ --declare @p26 int
+ --set @p26=NULL
+ --exec [dbo].[CollateralMgmtInUp] @AccountID=N'',@UCICID=N'',@CustomerID=N'9987888',@CustomerName=N'Akash Kumar',@TaggingAlt_Key=1,@DistributionAlt_Key=2,@CollateralID=N'2',
+ --@CollateralTypeAlt_Key=2,@CollateralSubTypeAlt_Key=37,@CollateralOwnerTypeAlt_Key=1,@CollateralOwnerShipTypeAlt_Key=1,@ChargeTypeAlt_Key=3,@ChargeNatureAlt_Key=22,@ShareAvailabletoBankAlt_Key=2,
+ --@CollateralShareamount=100,@TotalCollateralvalueatcustomerlevel=2000,@MenuID=14610,@CrModApBy=N'fnachecker',@Remark=N'',@OperationFlag=16,@AuthMode=N'Y',@TimeKey=25999,@EffectiveFromTimeKey=N'25999',
+ --@EffectiveToTimeKey=49999,@ScreenEntityId=NULL,@Result=@p26 output
+ --select @p26
+ --go
+ --------------------------------------------------------------------------------------------------------------------
+ ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+(
+  v_CollateralID IN NUMBER DEFAULT 0 ,
+  v_AddressType IN VARCHAR2 DEFAULT ' ' ,
+  v_Category IN VARCHAR2 DEFAULT ' ' ,
+  v_AddressLine1 IN VARCHAR2 DEFAULT ' ' ,
+  v_AddressLine2 IN VARCHAR2 DEFAULT ' ' ,
+  v_AddressLine3 IN VARCHAR2 DEFAULT ' ' ,
+  v_City IN VARCHAR2 DEFAULT ' ' ,
+  v_PinCode IN VARCHAR2 DEFAULT ' ' ,
+  v_Country IN VARCHAR2 DEFAULT ' ' ,
+  v_State IN VARCHAR2 DEFAULT ' ' ,
+  v_District IN VARCHAR2 DEFAULT ' ' ,
+  v_STDCodeO IN VARCHAR2 DEFAULT ' ' ,
+  v_PhoneNumberO IN VARCHAR2 DEFAULT ' ' ,
+  v_STDCodeR IN VARCHAR2 DEFAULT ' ' ,
+  v_PhoneNumberR IN VARCHAR2 DEFAULT ' ' ,
+  v_FaxNumber IN VARCHAR2 DEFAULT ' ' ,
+  v_MobileNO IN VARCHAR2 DEFAULT ' ' ,
+  v_AuthorisationStatus IN VARCHAR2 DEFAULT NULL ,
+  iv_EffectiveFromTimeKey IN NUMBER DEFAULT 0 ,
+  iv_EffectiveToTimeKey IN NUMBER DEFAULT 0 ,
+  v_CreatedBy IN VARCHAR2 DEFAULT NULL ,
+  v_DateCreated IN DATE DEFAULT NULL ,
+  v_ModifiedBy IN VARCHAR2 DEFAULT NULL ,
+  v_DateModified IN DATE DEFAULT NULL ,
+  v_ApprovedBy IN VARCHAR2 DEFAULT NULL ,
+  v_DateApproved IN DATE DEFAULT NULL ,
+  v_Remark IN VARCHAR2 DEFAULT ' ' ,
+  --,@MenuID					SMALLINT		= 0  change to Int
+  v_MenuID IN NUMBER DEFAULT 0 ,
+  v_OperationFlag IN NUMBER DEFAULT 0 ,
+  v_AuthMode IN CHAR DEFAULT 'N' ,
+  --,@EffectiveFromTimeKey		INT		= 0--,@EffectiveToTimeKey		INT		= 0
+  iv_TimeKey IN NUMBER DEFAULT 0 ,
+  v_CrModApBy IN VARCHAR2 DEFAULT ' ' ,
+  v_ScreenEntityId IN NUMBER DEFAULT NULL ,
+  v_Result OUT NUMBER/* DEFAULT 0*/
+)
+AS
+   v_TimeKey NUMBER(10,0) := iv_TimeKey;
+   v_EffectiveFromTimeKey NUMBER(10,0) := iv_EffectiveFromTimeKey;
+   v_EffectiveToTimeKey NUMBER(10,0) := iv_EffectiveToTimeKey;
+   v_ErrorHandle NUMBER(10,0) := 0;
+   v_ExEntityKey NUMBER(10,0) := 0;
+   ------------Added for Rejection Screen  29/06/2020   ----------
+   --DECLARE			
+   v_Uniq_EntryID NUMBER(10,0) := 0;
+   v_RejectedBY VARCHAR2(50) := NULL;
+   v_RemarkBy VARCHAR2(50) := NULL;
+   v_RejectRemark VARCHAR2(200) := NULL;
+   v_ScreenName VARCHAR2(200) := NULL;
+   v_CollateralOwnerShipTypeAlt_Key NUMBER(10,0);
+
+BEGIN
+
+   --SET @ScreenName = 'Collateral'
+   -------------------------------------------------------------
+   SELECT Timekey 
+
+     INTO v_Timekey
+     FROM SysDataMatrix 
+    WHERE  CurrentStatus = 'C';
+   v_EffectiveFromTimeKey := v_TimeKey ;
+   v_EffectiveToTimeKey := 49999 ;
+   --AS
+   IF ( v_OperationFlag IN ( 1,2 )
+    ) THEN
+
+   BEGIN
+      INSERT INTO CollateralOtherOwner
+        ( CollateralID, AddressType, Company, AddressLine1, AddressLine2, AddressLine3, City, PinCode, Country, STATE, District, STDCodeO, PhoneNumberO, STDCodeR, PhoneNumberR, FaxNumber, MobileNO, AuthorisationStatus, EffectiveFromTimeKey, EffectiveToTimeKey, CreatedBy, DateCreated, ModifiedBy, DateModified, ApprovedBy, DateApproved )
+        ( SELECT v_CollateralID ,
+                 v_AddressType ,
+                 v_Category ,
+                 v_AddressLine1 ,
+                 v_AddressLine2 ,
+                 v_AddressLine3 ,
+                 v_City ,
+                 v_PinCode ,
+                 v_Country ,
+                 v_State ,
+                 v_District ,
+                 v_STDCodeO ,
+                 v_PhoneNumberO ,
+                 v_STDCodeR ,
+                 v_PhoneNumberR ,
+                 v_FaxNumber ,
+                 v_MobileNO ,
+                 v_AuthorisationStatus ,
+                 v_EffectiveFromTimeKey ,
+                 v_EffectiveToTimeKey ,
+                 v_CreatedBy ,
+                 v_DateCreated ,
+                 v_ModifiedBy ,
+                 v_DateModified ,
+                 v_ApprovedBy ,
+                 v_DateApproved 
+            FROM DUAL  );
+
+   END;
+   END IF;
+   --Logic For Solo
+
+   BEGIN
+      v_Result := 0 ;
+
+   END;
+
+   BEGIN
+      v_Result := 1 ;
+
+   END;
+
+EXCEPTION WHEN OTHERS THEN utils.handleerror(SQLCODE,SQLERRM);
+END;
+
+/
+
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "ROLE_LOCAL_RBL_MISDB_PROD_ORACLE";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "QPI_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "ALERT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "DWH_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "MAIN_PRO";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "BS_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "ACL_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "ROLE_LOCAL_RBL_MISDB_PROD_ORACLE";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "QPI_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "ALERT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "DWH_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "MAIN_PRO";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "BS_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "ACL_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "ROLE_ALL_DB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "CC_CDR_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "RBL_BI_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "BSG_READ_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "STD_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "ETL_TEMP_RBL_TEMPDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "RBL_TEMPDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "STG_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "ADF_CDR_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "ROLE_ALL_DB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "CC_CDR_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "RBL_BI_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "BSG_READ_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "STD_FIN_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "ETL_TEMP_RBL_TEMPDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "RBL_TEMPDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "STG_FIN_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."COLLATERALOWNERADDRESSINSERT_PROD_04122023" TO "ADF_CDR_RBL_STGDB";

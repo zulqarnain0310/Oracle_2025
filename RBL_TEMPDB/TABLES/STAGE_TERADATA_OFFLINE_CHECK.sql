@@ -1,0 +1,11 @@
+--------------------------------------------------------
+--  DDL for Table STAGE_TERADATA_OFFLINE_CHECK
+--------------------------------------------------------
+
+  CREATE GLOBAL TEMPORARY TABLE "RBL_TEMPDB"."STAGE_TERADATA_OFFLINE_CHECK" 
+   (	"INDEX" NUMBER, 
+	"DBNAME" VARCHAR2(256 BYTE), 
+	"TABNAME" VARCHAR2(256 BYTE), 
+	"CONSTRAINT_NAME" VARCHAR2(256 BYTE), 
+	"SEARCH_CONDITION" VARCHAR2(4000 BYTE)
+   ) ON COMMIT PRESERVE ROWS ;

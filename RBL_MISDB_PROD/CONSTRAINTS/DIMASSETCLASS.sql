@@ -1,0 +1,7 @@
+--------------------------------------------------------
+--  Constraints for Table DIMASSETCLASS
+--------------------------------------------------------
+
+  ALTER TABLE "RBL_MISDB_PROD"."DIMASSETCLASS" MODIFY ("ASSETCLASS_KEY" NOT NULL ENABLE);
+  ALTER TABLE "RBL_MISDB_PROD"."DIMASSETCLASS" MODIFY ("ASSETCLASSALT_KEY" NOT NULL ENABLE);
+  ALTER TABLE "RBL_MISDB_PROD"."DIMASSETCLASS" MODIFY ("D2KTIMESTAMP" NOT NULL ENABLE);

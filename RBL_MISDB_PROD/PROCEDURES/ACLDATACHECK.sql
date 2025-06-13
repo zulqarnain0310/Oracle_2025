@@ -1,0 +1,194 @@
+--------------------------------------------------------
+--  DDL for Procedure ACLDATACHECK
+--------------------------------------------------------
+set define off;
+
+  CREATE OR REPLACE EDITIONABLE PROCEDURE "RBL_MISDB_PROD"."ACLDATACHECK" 
+AS
+   ------/* ACL PROCESS STEP ERROR */
+   ------DECLARE 26267 Int =(select TimeKey from Automate_Advances where EXT_FLG='Y')
+   ------DECLARE @Date date=(select Date from Automate_Advances where EXT_FLG='Y')
+   ------DECLARE @CNT1 INT =0
+   ------select * from pro.ACCOUNTCAL
+   /* ACL TOTAL NO OF ACCOUNT */
+   v_cursor SYS_REFCURSOR;
+
+BEGIN
+
+   OPEN  v_cursor FOR
+      SELECT COUNT(1)  
+        FROM MAIN_PRO.ACCOUNTCAL 
+       WHERE  EffectiveFromTimeKey = 26282 ;
+      DBMS_SQL.RETURN_RESULT(v_cursor);
+   OPEN  v_cursor FOR
+      SELECT COUNT(1)  
+        FROM MAIN_PRO.AccountCal_Hist 
+       WHERE  EffectiveFromTimeKey <= 26282
+                AND EffectiveToTimeKey >= 26282 ;
+      DBMS_SQL.RETURN_RESULT(v_cursor);
+   /* TOTAL NO OF NPA ACCOUNT  */
+   OPEN  v_cursor FOR
+      SELECT COUNT(1)  
+        FROM MAIN_PRO.ACCOUNTCAL 
+       WHERE  FinalAssetClassAlt_Key > 1
+                AND EffectiveFromTimeKey = 26282 ;
+      DBMS_SQL.RETURN_RESULT(v_cursor);
+   OPEN  v_cursor FOR
+      SELECT COUNT(1)  
+        FROM MAIN_PRO.AccountCal_Hist 
+       WHERE  EffectiveFromTimeKey <= 26282
+                AND EffectiveToTimeKey >= 26282
+                AND FinalAssetClassAlt_Key > 1 ;
+      DBMS_SQL.RETURN_RESULT(v_cursor);
+   OPEN  v_cursor FOR
+      SELECT COUNT(1)  
+        FROM ACL_NPA_DATA 
+       WHERE  Process_Date = '15-12-2021'
+                AND FinalAssetClassAlt_Key > 1 ;
+      DBMS_SQL.RETURN_RESULT(v_cursor);
+   /* TOTAL NO OF ACCOUNT DEGRADE */
+   OPEN  v_cursor FOR
+      SELECT COUNT(1)  
+        FROM MAIN_PRO.ACCOUNTCAL 
+       WHERE  FinalAssetClassAlt_Key > 1
+                AND InitialAssetClassAlt_Key = 1 ;
+      DBMS_SQL.RETURN_RESULT(v_cursor);
+   OPEN  v_cursor FOR
+      SELECT COUNT(1)  
+        FROM MAIN_PRO.AccountCal_Hist 
+       WHERE  EffectiveFromTimeKey <= 26282
+                AND EffectiveToTimeKey >= 26282
+                AND FinalAssetClassAlt_Key > 1
+                AND InitialAssetClassAlt_Key = 1 ;
+      DBMS_SQL.RETURN_RESULT(v_cursor);
+   OPEN  v_cursor FOR
+      SELECT COUNT(1)  
+        FROM ReverseFeedData 
+       WHERE  DateofData = '2021-12-15'
+                AND AssetClass > 1 ;
+      DBMS_SQL.RETURN_RESULT(v_cursor);
+   /* TOTAL NO OF ACCOUNT UPGRADE */
+   OPEN  v_cursor FOR
+      SELECT COUNT(1)  
+        FROM MAIN_PRO.ACCOUNTCAL 
+       WHERE  FinalAssetClassAlt_Key = 1
+                AND InitialAssetClassAlt_Key > 1 ;
+      DBMS_SQL.RETURN_RESULT(v_cursor);
+   OPEN  v_cursor FOR
+      SELECT COUNT(1)  
+        FROM MAIN_PRO.AccountCal_Hist 
+       WHERE  EffectiveFromTimeKey <= 26282
+                AND EffectiveToTimeKey >= 26282
+                AND FinalAssetClassAlt_Key = 1
+                AND InitialAssetClassAlt_Key > 1 ;
+      DBMS_SQL.RETURN_RESULT(v_cursor);
+   OPEN  v_cursor FOR
+      SELECT COUNT(1)  
+        FROM ReverseFeedData 
+       WHERE  DateofData = '2021-12-15'
+                AND AssetClass = 1 ;
+      DBMS_SQL.RETURN_RESULT(v_cursor);
+   /* TOTAL NO OF CUSTOMERS */
+   OPEN  v_cursor FOR
+      SELECT COUNT(1)  
+        FROM MAIN_PRO.CUSTOMERCAL  ;
+      DBMS_SQL.RETURN_RESULT(v_cursor);
+   OPEN  v_cursor FOR
+      SELECT COUNT(1)  
+        FROM MAIN_PRO.CustomerCal_Hist 
+       WHERE  EffectiveFromTimeKey <= 26282
+                AND EffectiveToTimeKey >= 26282 ;
+      DBMS_SQL.RETURN_RESULT(v_cursor);
+   /* TOTAL NO OF CUSTOMERS NPA	*/
+   OPEN  v_cursor FOR
+      SELECT COUNT(1)  
+        FROM MAIN_PRO.CUSTOMERCAL 
+       WHERE  SysAssetClassAlt_Key > 1 ;
+      DBMS_SQL.RETURN_RESULT(v_cursor);
+   OPEN  v_cursor FOR
+      SELECT COUNT(1)  
+        FROM MAIN_PRO.CustomerCal_Hist 
+       WHERE  EffectiveFromTimeKey <= 26282
+                AND EffectiveToTimeKey >= 26282
+                AND SysAssetClassAlt_Key > 1 ;
+      DBMS_SQL.RETURN_RESULT(v_cursor);
+   /* TOTAL NO OF CUSTOMERS DEGRADE	*/
+   OPEN  v_cursor FOR
+      SELECT COUNT(1)  
+        FROM MAIN_PRO.CUSTOMERCAL 
+       WHERE  SysAssetClassAlt_Key > 1
+                AND SrcAssetClassAlt_Key = 1 ;
+      DBMS_SQL.RETURN_RESULT(v_cursor);
+   OPEN  v_cursor FOR
+      SELECT COUNT(1)  
+        FROM MAIN_PRO.CustomerCal_Hist 
+       WHERE  EffectiveFromTimeKey <= 26282
+                AND EffectiveToTimeKey >= 26282
+                AND SysAssetClassAlt_Key > 1
+                AND SrcAssetClassAlt_Key = 1 ;
+      DBMS_SQL.RETURN_RESULT(v_cursor);
+   /* TOTAL NO OF CUSTOMERS UPGRADE*/
+   OPEN  v_cursor FOR
+      SELECT COUNT(1)  
+        FROM MAIN_PRO.CUSTOMERCAL 
+       WHERE  SysAssetClassAlt_Key = 1
+                AND SrcAssetClassAlt_Key > 1 ;
+      DBMS_SQL.RETURN_RESULT(v_cursor);
+   OPEN  v_cursor FOR
+      SELECT COUNT(1)  
+        FROM MAIN_PRO.CustomerCal_Hist 
+       WHERE  EffectiveFromTimeKey <= 26282
+                AND EffectiveToTimeKey >= 26282
+                AND SysAssetClassAlt_Key = 1
+                AND SrcAssetClassAlt_Key > 1 ;
+      DBMS_SQL.RETURN_RESULT(v_cursor);
+
+EXCEPTION WHEN OTHERS THEN utils.handleerror(SQLCODE,SQLERRM);
+END;
+
+/
+
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "ROLE_LOCAL_RBL_MISDB_PROD_ORACLE";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "QPI_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "ALERT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "DWH_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "MAIN_PRO";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "BS_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "ACL_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "ROLE_LOCAL_RBL_MISDB_PROD_ORACLE";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "QPI_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "ALERT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "DWH_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "MAIN_PRO";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "BS_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "ACL_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "ROLE_ALL_DB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "CC_CDR_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "RBL_BI_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "BSG_READ_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "STD_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "ETL_TEMP_RBL_TEMPDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "RBL_TEMPDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "STG_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "ADF_CDR_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "ROLE_ALL_DB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "CC_CDR_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "RBL_BI_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "BSG_READ_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "STD_FIN_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "ETL_TEMP_RBL_TEMPDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "RBL_TEMPDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "STG_FIN_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLDATACHECK" TO "ADF_CDR_RBL_STGDB";

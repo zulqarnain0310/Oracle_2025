@@ -1,0 +1,15 @@
+--------------------------------------------------------
+--  DDL for Table STAGE_SS2K5_DB_PRINCIPALS
+--------------------------------------------------------
+
+  CREATE GLOBAL TEMPORARY TABLE "RBL_TEMPDB"."STAGE_SS2K5_DB_PRINCIPALS" 
+   (	"SVRID_FK" NUMBER(38,0), 
+	"DBID_GEN_FK" NUMBER(38,0), 
+	"PRINID_GEN" NUMBER(38,0), 
+	"DEFAULT_SCHEMA_NAME" VARCHAR2(256 CHAR), 
+	"TYPE" CHAR(1 CHAR), 
+	"PRINCIPAL_ID" NUMBER(38,0), 
+	"OWNING_PRINCIPAL_ID" NUMBER(38,0), 
+	"NAME" VARCHAR2(256 CHAR), 
+	"SID" RAW(85)
+   ) ON COMMIT PRESERVE ROWS ;

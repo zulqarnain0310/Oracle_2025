@@ -1,0 +1,5 @@
+--------------------------------------------------------
+--  Constraints for Table STAGE_SYB12_SYSOBJECTS
+--------------------------------------------------------
+
+  ALTER TABLE "RBL_TEMPDB"."STAGE_SYB12_SYSOBJECTS" MODIFY ("ID" NOT NULL ENABLE);

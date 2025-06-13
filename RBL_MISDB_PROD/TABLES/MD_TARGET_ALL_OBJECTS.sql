@@ -1,0 +1,12 @@
+--------------------------------------------------------
+--  DDL for Table MD_TARGET_ALL_OBJECTS
+--------------------------------------------------------
+
+  CREATE TABLE "RBL_MISDB_PROD"."MD_TARGET_ALL_OBJECTS" 
+   (	"STATUS" VARCHAR2(7 BYTE), 
+	"OBJECT_NAME" VARCHAR2(128 BYTE), 
+	"OWNER" VARCHAR2(128 BYTE)
+   ) SEGMENT CREATION DEFERRED 
+  PCTFREE 10 PCTUSED 40 INITRANS 1 MAXTRANS 255 
+ NOCOMPRESS LOGGING
+  TABLESPACE "USERS" ;

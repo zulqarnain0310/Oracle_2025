@@ -1,0 +1,12 @@
+--------------------------------------------------------
+--  DDL for Table STAGE_TERADATA_OFFLINE_INDDET
+--------------------------------------------------------
+
+  CREATE GLOBAL TEMPORARY TABLE "RBL_TEMPDB"."STAGE_TERADATA_OFFLINE_INDDET" 
+   (	"INDEX" NUMBER, 
+	"DBNAME" VARCHAR2(256 BYTE), 
+	"TABNAME" VARCHAR2(256 BYTE), 
+	"INDNAME" VARCHAR2(256 BYTE), 
+	"COLNAME" VARCHAR2(256 BYTE), 
+	"COLSEQ" NUMBER
+   ) ON COMMIT PRESERVE ROWS ;

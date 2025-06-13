@@ -1,0 +1,141 @@
+--------------------------------------------------------
+--  DDL for Procedure ACLNPAOUTPUTRFMATCHING
+--------------------------------------------------------
+set define off;
+
+  CREATE OR REPLACE EDITIONABLE PROCEDURE "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" 
+--exec ACLNPAOutputRFMatching '01/02/2022'
+
+(
+  v_Date IN VARCHAR2
+)
+AS
+   ------------------************************AssetClassification***************-------------------------------------
+   v_cursor SYS_REFCURSOR;
+
+BEGIN
+
+   OPEN  v_cursor FOR
+      SELECT 'Asset Classification Counts' Title  
+        FROM DUAL  ;
+      DBMS_SQL.RETURN_RESULT(v_cursor);
+   ---------------------ReversefeedDegradeCount--------------
+   OPEN  v_cursor FOR
+      SELECT SourceName ,
+             COUNT(DISTINCT CustomerID)  RFCount  
+        FROM ( SELECT SourceName ,
+                      CustomerID 
+               FROM ACL_NPA_DATA 
+                WHERE  UTILS.CONVERT_TO_VARCHAR2(process_date,200,p_style=>105) = v_Date -- and SourceName = 'Finacle'
+
+                         AND InitialAssetClassAlt_Key = 1
+                         AND FinalAssetClassAlt_Key > 1
+               UNION 
+
+               ---------------------ReversefeedUpgradeCount--------------
+               SELECT SourceName ,
+                      CustomerID 
+               FROM ACL_UPG_DATA 
+                WHERE  UTILS.CONVERT_TO_VARCHAR2(process_date,200,p_style=>105) = v_Date -- and SourceName = 'Finacle'
+
+                         AND InitialAssetClassAlt_Key > 1
+                         AND FinalAssetClassAlt_Key = 1
+               UNION 
+
+               ------------------AssetClassAltkeyorNPADateChangedCount--------------
+               SELECT SourceName ,
+                      CustomerID 
+               FROM ACL_NPA_DATA 
+                WHERE  UTILS.CONVERT_TO_VARCHAR2(process_date,200,p_style=>105) = v_Date --and SourceName = 'Finacle'
+
+                         AND InitialAssetClassAlt_Key > 1
+                         AND FinalAssetClassAlt_Key > 1
+                         AND ( InitialAssetClassAlt_Key <> FinalAssetClassAlt_Key
+                         OR InitialNpaDt <> FinalNpaDt ) ) x
+        GROUP BY SourceName ;
+      DBMS_SQL.RETURN_RESULT(v_cursor);
+   --------------****************************Degrade*********************----------------
+   OPEN  v_cursor FOR
+      SELECT 'Degrade Counts' Title  
+        FROM DUAL  ;
+      DBMS_SQL.RETURN_RESULT(v_cursor);
+   ---------------------ReversefeedDegradeCount--------------
+   OPEN  v_cursor FOR
+      SELECT SourceName ,
+             COUNT(DISTINCT CustomerAcid)  RFCount  
+        FROM ( SELECT SourceName ,
+                      CustomerAcid 
+               FROM ACL_NPA_DATA 
+                WHERE  UTILS.CONVERT_TO_VARCHAR2(process_date,200,p_style=>105) = v_Date -- and SourceName = 'Finacle'
+
+                         AND InitialAssetClassAlt_Key = 1
+                         AND FinalAssetClassAlt_Key > 1 ) X
+        GROUP BY SourceName ;
+      DBMS_SQL.RETURN_RESULT(v_cursor);
+   ---------------------ReversefeedUpgradeCount--------------
+   OPEN  v_cursor FOR
+      SELECT 'Upgrade Counts' Title  
+        FROM DUAL  ;
+      DBMS_SQL.RETURN_RESULT(v_cursor);
+   OPEN  v_cursor FOR
+      SELECT SourceName ,
+             COUNT(DISTINCT CustomerAcid)  RFCount  
+        FROM ( SELECT SourceName ,
+                      CustomerAcid 
+               FROM ACL_UPG_DATA 
+                WHERE  UTILS.CONVERT_TO_VARCHAR2(process_date,200,p_style=>105) = v_Date -- and SourceName = 'Finacle'
+
+                         AND InitialAssetClassAlt_Key > 1
+                         AND FinalAssetClassAlt_Key = 1 ) Y
+        GROUP BY SourceName ;
+      DBMS_SQL.RETURN_RESULT(v_cursor);
+
+EXCEPTION WHEN OTHERS THEN utils.handleerror(SQLCODE,SQLERRM);
+END;
+
+/
+
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "ROLE_LOCAL_RBL_MISDB_PROD_ORACLE";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "QPI_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "ALERT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "DWH_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "MAIN_PRO";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "BS_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "ACL_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "ROLE_LOCAL_RBL_MISDB_PROD_ORACLE";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "QPI_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "ALERT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "DWH_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "MAIN_PRO";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "BS_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "ACL_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "ROLE_ALL_DB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "CC_CDR_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "RBL_BI_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "BSG_READ_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "STD_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "ETL_TEMP_RBL_TEMPDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "RBL_TEMPDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "STG_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "ADF_CDR_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "ROLE_ALL_DB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "CC_CDR_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "RBL_BI_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "BSG_READ_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "STD_FIN_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "ETL_TEMP_RBL_TEMPDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "RBL_TEMPDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "STG_FIN_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ACLNPAOUTPUTRFMATCHING" TO "ADF_CDR_RBL_STGDB";

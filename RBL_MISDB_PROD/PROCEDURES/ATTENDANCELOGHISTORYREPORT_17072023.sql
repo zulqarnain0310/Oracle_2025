@@ -1,0 +1,151 @@
+--------------------------------------------------------
+--  DDL for Procedure ATTENDANCELOGHISTORYREPORT_17072023
+--------------------------------------------------------
+set define off;
+
+  CREATE OR REPLACE EDITIONABLE PROCEDURE "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" 
+(
+  iv_FromDate IN VARCHAR2,
+  iv_ToDate IN VARCHAR2
+)
+AS
+   v_FromDate VARCHAR2(10) := iv_FromDate;
+   v_ToDate VARCHAR2(10) := iv_ToDate;
+   v_cursor SYS_REFCURSOR;
+--DECLARE
+--	@FromDate varchar(10)=N'01/12/2022',
+--	@ToDate varchar(10)=N'26/04/2023'
+
+BEGIN
+
+   v_FromDate := UTILS.CONVERT_TO_VARCHAR2(v_FromDate,200,p_style=>105) ;
+   v_ToDate := UTILS.CONVERT_TO_VARCHAR2(v_ToDate,200,p_style=>105) ;
+   IF utils.object_id('TEMPDB..tt_DimUserInfo_3') IS NOT NULL THEN
+    EXECUTE IMMEDIATE ' TRUNCATE TABLE tt_DimUserInfo_3 ';
+   END IF;
+   DELETE FROM tt_DimUserInfo_3;
+   UTILS.IDENTITY_RESET('tt_DimUserInfo_3');
+
+   INSERT INTO tt_DimUserInfo_3 SELECT * 
+        FROM ( SELECT * ,
+                      ROW_NUMBER() OVER ( PARTITION BY UserLoginid ORDER BY EffectiveFromTimeKey DESC, EntityKey DESC  ) RN  
+               FROM DimUserInfo  ) A
+       WHERE  RN = 1;
+   IF utils.object_id('TEMPDB..tt_LogAttendance_3') IS NOT NULL THEN
+    EXECUTE IMMEDIATE ' TRUNCATE TABLE tt_LogAttendance_3 ';
+   END IF;
+   DELETE FROM tt_LogAttendance_3;
+   UTILS.IDENTITY_RESET('tt_LogAttendance_3');
+
+   INSERT INTO tt_LogAttendance_3 SELECT DISTINCT LogCreatedBy UserID  ,
+                                                  C.UserName ,
+                                                  Email_ID ,
+                                                  Designation ,
+                                                  D.RoleDescription ,
+                                                  DUDept.DeptGroupName ,
+                                                  a.MenuID ,
+                                                  b.ScreenName ,
+                                                  LogCreationStatus ,
+                                                  CASE 
+                                                       WHEN LogCreationStatus = 'NP' THEN 'New Record Inserted'
+                                                       WHEN LogCreationStatus = 'MP' THEN 'Modify Record'
+                                                       WHEN LogCreationStatus = '1A' THEN '1st Level Authorise'
+                                                       WHEN LogCreationStatus = 'R' THEN 'Reject Record'
+                                                  ELSE '2nd Level Authorise'
+                                                     END LogCreationStatusDescription  ,
+                                                  --,LogCreatedDt
+                                                  (UTILS.CONVERT_TO_VARCHAR2(LogCreatedDt,10,p_style=>105) || ' ' || UTILS.CONVERT_TO_VARCHAR2(LogCreatedDt,30,p_style=>108)) LogCreatedDt  ,
+                                                  LogStatus ,
+                                                  CASE 
+                                                       WHEN LogStatus = 'P' THEN 'Pending Status'
+                                                       WHEN LogStatus = 'R' THEN 'Reject Status'
+                                                  ELSE 'Approve Status'
+                                                     END LogStatusDescription  ,
+                                                  A.EntityKey 
+        FROM SysUserActivityLog_Attendence a
+               JOIN MetaScreenFieldDetail b   ON a.MenuID = b.MenuId
+               JOIN tt_DimUserInfo_3 c   ON a.LogCreatedBy = c.UserLoginID
+               JOIN DimUserRole D   ON C.UserRoleAlt_Key = D.UserRoleAlt_Key
+               LEFT JOIN DimUserDeptGroup DUDept   ON C.DeptGroupCode = DUDept.DeptGroupId
+               AND DUDept.EffectiveToTimeKey = 49999
+
+      --where			a.LogCreatedDt between @FromDate and @ToDate
+      WHERE  UTILS.CONVERT_TO_VARCHAR2(a.LogCreatedDt,200) >= v_FromDate
+               AND UTILS.CONVERT_TO_VARCHAR2(a.LogCreatedDt,200) <= v_ToDate
+        ORDER BY 14 DESC;
+   --select * from DimUserInfo
+   --select distinct LogStatus from SysUserActivityLog_Attendence
+   WITH LogAttendance_CTE AS ( SELECT * ,
+                                      ROW_NUMBER() OVER ( PARTITION BY UserID, MenuID, LogCreatedDt ORDER BY LogCreatedDt DESC  ) RN  
+     FROM tt_LogAttendance_3  ) 
+      DELETE LogAttendance_CTE
+
+       WHERE  RN > 1
+      ;
+   OPEN  v_cursor FOR
+      SELECT UserID ,
+             UserName ,
+             Email_ID ,
+             Designation ,
+             RoleDescription ,
+             DeptGroupName ,
+             MenuID ,
+             ScreenName ,
+             LogCreationStatus ,
+             LogCreationStatusDescription ,
+             LogCreatedDt ,
+             LogStatus ,
+             LogStatusDescription 
+        FROM tt_LogAttendance_3 
+        ORDER BY EntityKey DESC ;
+      DBMS_SQL.RETURN_RESULT(v_cursor);
+
+EXCEPTION WHEN OTHERS THEN utils.handleerror(SQLCODE,SQLERRM);
+END;
+
+/
+
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "ROLE_LOCAL_RBL_MISDB_PROD_ORACLE";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "QPI_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "ALERT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "DWH_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "MAIN_PRO";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "BS_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "ACL_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "ROLE_LOCAL_RBL_MISDB_PROD_ORACLE";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "QPI_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "ALERT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "DWH_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "MAIN_PRO";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "BS_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "ACL_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "ROLE_ALL_DB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "CC_CDR_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "RBL_BI_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "BSG_READ_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "STD_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "ETL_TEMP_RBL_TEMPDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "RBL_TEMPDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "STG_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "ADF_CDR_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "ROLE_ALL_DB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "CC_CDR_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "RBL_BI_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "BSG_READ_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "STD_FIN_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "ETL_TEMP_RBL_TEMPDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "RBL_TEMPDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "STG_FIN_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."ATTENDANCELOGHISTORYREPORT_17072023" TO "ADF_CDR_RBL_STGDB";

@@ -1,0 +1,7 @@
+--------------------------------------------------------
+--  DDL for Index PK__BACKDATE__9EC07B8EEA2910B0
+--------------------------------------------------------
+
+  CREATE UNIQUE INDEX "RBL_MISDB_PROD"."PK__BACKDATE__9EC07B8EEA2910B0" ON "RBL_MISDB_PROD"."BACKDATEDPROCMONITORSTATUS" ("ENTITYKEY") 
+  PCTFREE 10 INITRANS 2 MAXTRANS 255 COMPUTE STATISTICS 
+  TABLESPACE "USERS" ;

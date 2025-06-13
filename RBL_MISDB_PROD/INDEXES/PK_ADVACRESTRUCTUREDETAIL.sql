@@ -1,0 +1,7 @@
+--------------------------------------------------------
+--  DDL for Index PK_ADVACRESTRUCTUREDETAIL
+--------------------------------------------------------
+
+  CREATE UNIQUE INDEX "RBL_MISDB_PROD"."PK_ADVACRESTRUCTUREDETAIL" ON "RBL_MISDB_PROD"."ADVACRESTRUCTUREDETAIL_MOD_OLD" ("ENTITYKEY") 
+  PCTFREE 10 INITRANS 2 MAXTRANS 255 COMPUTE STATISTICS 
+  TABLESPACE "USERS" ;

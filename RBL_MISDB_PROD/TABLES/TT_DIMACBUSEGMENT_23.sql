@@ -1,0 +1,10 @@
+--------------------------------------------------------
+--  DDL for Table TT_DIMACBUSEGMENT_23
+--------------------------------------------------------
+
+  CREATE GLOBAL TEMPORARY TABLE "RBL_MISDB_PROD"."TT_DIMACBUSEGMENT_23" 
+   (	"RN" NUMBER, 
+	"ACBUSEGMENTCODE" VARCHAR2(20 CHAR), 
+	"ACBUREVISEDSEGMENTCODE" VARCHAR2(20 CHAR), 
+	"ACBUSEGMENTDESCRIPTION" VARCHAR2(100 CHAR)
+   ) ON COMMIT DELETE ROWS ;

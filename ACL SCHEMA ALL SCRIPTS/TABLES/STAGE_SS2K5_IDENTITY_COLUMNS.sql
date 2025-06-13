@@ -1,0 +1,14 @@
+--------------------------------------------------------
+--  DDL for Table STAGE_SS2K5_IDENTITY_COLUMNS
+--------------------------------------------------------
+
+  CREATE GLOBAL TEMPORARY TABLE "ACL_RBL_MISDB_PROD"."STAGE_SS2K5_IDENTITY_COLUMNS" 
+   (	"SVRID_FK" NUMBER(38,0), 
+	"DBID_GEN_FK" NUMBER(38,0), 
+	"OBJECT_ID_GEN" NUMBER(38,0), 
+	"SEED_VALUE" NUMBER(38,0), 
+	"INCREMENT_VALUE" NUMBER(38,0), 
+	"LAST_VALUE" NUMBER(38,0), 
+	"OBJECT_ID" NUMBER(38,0), 
+	"COLUMN_ID" NUMBER(38,0)
+   ) ON COMMIT PRESERVE ROWS ;

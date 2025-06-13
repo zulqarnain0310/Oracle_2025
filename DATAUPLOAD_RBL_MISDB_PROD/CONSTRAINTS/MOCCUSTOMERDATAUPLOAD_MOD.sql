@@ -1,0 +1,6 @@
+--------------------------------------------------------
+--  Constraints for Table MOCCUSTOMERDATAUPLOAD_MOD
+--------------------------------------------------------
+
+  ALTER TABLE "DATAUPLOAD_RBL_MISDB_PROD"."MOCCUSTOMERDATAUPLOAD_MOD" MODIFY ("ENTITYKEY" NOT NULL ENABLE);
+  ALTER TABLE "DATAUPLOAD_RBL_MISDB_PROD"."MOCCUSTOMERDATAUPLOAD_MOD" MODIFY ("D2KTIMESTAMP" NOT NULL ENABLE);

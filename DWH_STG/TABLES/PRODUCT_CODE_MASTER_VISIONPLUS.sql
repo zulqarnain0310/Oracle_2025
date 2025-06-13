@@ -1,0 +1,12 @@
+--------------------------------------------------------
+--  DDL for Table PRODUCT_CODE_MASTER_VISIONPLUS
+--------------------------------------------------------
+
+  CREATE TABLE "DWH_STG"."PRODUCT_CODE_MASTER_VISIONPLUS" 
+   (	"LOGO" VARCHAR2(3 BYTE), 
+	"PRODUCT_NAME" VARCHAR2(30 BYTE), 
+	"PDT_CAT1" VARCHAR2(5 BYTE)
+   ) SEGMENT CREATION DEFERRED 
+  PCTFREE 10 PCTUSED 40 INITRANS 1 MAXTRANS 255 
+ NOCOMPRESS LOGGING
+  TABLESPACE "USERS" ;

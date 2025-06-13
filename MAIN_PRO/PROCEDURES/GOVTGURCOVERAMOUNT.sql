@@ -1,0 +1,130 @@
+--------------------------------------------------------
+--  DDL for Procedure GOVTGURCOVERAMOUNT
+--------------------------------------------------------
+set define off;
+
+  CREATE OR REPLACE EDITIONABLE PROCEDURE "MAIN_PRO"."GOVTGURCOVERAMOUNT" /*=====================================
+AUTHER : TRILOKI KHANNA
+CREATE DATE : 27-11-2019
+MODIFY DATE : 27-11-2019
+DESCRIPTION : Govt Gur Cover Amount
+EXEC pro.GovtGurCoverAmount  @TIMEKEY=25410
+====================================*/
+(
+  v_TimeKey IN NUMBER
+)
+AS
+
+BEGIN
+    DECLARE V_SQLERRM VARCHAR(150);
+   BEGIN
+      DECLARE
+         v_FITL NUMBER(5,0) ;
+
+      BEGIN
+      
+        SELECT ProvisionAlt_Key INTO v_FITL 
+           FROM RBL_MISDB_PROD.DimProvision_Seg 
+          WHERE  EffectiveFromTimeKey <= v_TimeKey
+                   AND EffectiveToTimeKey >= v_TimeKey
+                   AND ProvisionShortNameEnum = 'FITL' ;
+
+         UPDATE GTT_AccountCal
+            SET CoverGovGur = 0;
+
+         /******************************************************************************************************
+         	 ******************************************************************************************************
+         	                        Provision Compuatation on Govt. Guar. Cover poration
+         	 ******************************************************************************************************
+         	 ******************************************************************************************************/
+         MERGE INTO GTT_AccountCal A
+         USING (SELECT A.ROWID row_id, CASE 
+         WHEN NVL(Acl.AssetClassShortNameEnum, 'STD') = 'STD' THEN utils.round_(NVL(A.CoverGovGur, 0) * Prov.ProvisionSecured, 0)
+         WHEN NVL(Acl.AssetClassShortNameEnum, 'STD') = 'SUB' THEN utils.round_(NVL(A.CoverGovGur, 0) * Prov.ProvisionSecured, 0)
+         ELSE 0
+            END AS ProvCoverGovGur
+         FROM GTT_AccountCal A
+                JOIN GTT_CustomerCal b   ON a.CustomerEntityID = b.CustomerEntityID
+                JOIN RBL_MISDB_PROD.DimAssetClass Acl   ON Acl.EffectiveFromTimeKey <= v_TimeKey
+                AND Acl.EffectiveToTimeKey >= v_TimeKey
+                AND NVL(a.FinalAssetClassAlt_Key, 1) = Acl.AssetClassAlt_Key
+                JOIN RBL_MISDB_PROD.DimProvision_Seg Prov   ON Prov.EffectiveFromTimeKey <= v_TimeKey
+                AND Prov.EffectiveToTimeKey >= v_TimeKey
+                AND NVL(a.ProvisionAlt_Key, 1) = Prov.ProvisionAlt_key 
+          WHERE NVL(b.FlgProcessing, 'N') = 'N'
+           AND NVL(a.CoverGovGur, 0) > 0) src
+         ON ( A.ROWID = src.row_id )
+         WHEN MATCHED THEN UPDATE SET A.ProvCoverGovGur = src.ProvCoverGovGur;
+         UPDATE MAIN_PRO.AclRunningProcessStatus
+            SET COMPLETED = 'Y',
+                ERRORDATE = NULL,
+                ERRORDESCRIPTION = NULL,
+                COUNT = NVL(COUNT, 0) + 1
+          WHERE  RUNNINGPROCESSNAME = 'GovtGurCoverAmount';
+
+      END;
+   EXCEPTION
+      WHEN OTHERS THEN
+
+   BEGIN
+      -----------------Added for DashBoard 04-03-2021
+      --Update BANDAUDITSTATUS set CompletedCount=CompletedCount+1 where BandName='ASSET CLASSIFICATION'
+      V_SQLERRM:=SQLERRM;
+      UPDATE MAIN_PRO.AclRunningProcessStatus
+         SET COMPLETED = 'N',
+             ERRORDATE = SYSDATE,
+             ERRORDESCRIPTION = V_SQLERRM,
+             COUNT = NVL(COUNT, 0) + 1
+       WHERE  RUNNINGPROCESSNAME = 'GovtGurCoverAmount';
+
+   END;END;
+
+EXCEPTION WHEN OTHERS THEN utils.handleerror(SQLCODE,SQLERRM);
+END;
+
+/
+
+  GRANT EXECUTE ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "ROLE_LOCAL_RBL_MISDB_PROD_ORACLE";
+  GRANT EXECUTE ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "QPI_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "ALERT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "DWH_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "BS_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "ACL_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "RBL_MISDB_PROD";
+  GRANT EXECUTE ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT DEBUG ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "ROLE_LOCAL_RBL_MISDB_PROD_ORACLE";
+  GRANT DEBUG ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT DEBUG ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "QPI_RBL_MISDB_PROD";
+  GRANT DEBUG ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "ALERT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "DWH_RBL_MISDB_PROD";
+  GRANT DEBUG ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT DEBUG ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "BS_RBL_MISDB_PROD";
+  GRANT DEBUG ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "ACL_RBL_MISDB_PROD";
+  GRANT DEBUG ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT DEBUG ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "RBL_MISDB_PROD";
+  GRANT DEBUG ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "ROLE_ALL_DB";
+  GRANT EXECUTE ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "CC_CDR_RBL_STGDB";
+  GRANT EXECUTE ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "RBL_BI_RBL_STGDB";
+  GRANT EXECUTE ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "BSG_READ_RBL_STGDB";
+  GRANT EXECUTE ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "STD_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "RBL_STGDB";
+  GRANT EXECUTE ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "ETL_TEMP_RBL_TEMPDB";
+  GRANT EXECUTE ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "RBL_TEMPDB";
+  GRANT EXECUTE ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "STG_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "ADF_CDR_RBL_STGDB";
+  GRANT DEBUG ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "ROLE_ALL_DB";
+  GRANT DEBUG ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "CC_CDR_RBL_STGDB";
+  GRANT DEBUG ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "RBL_BI_RBL_STGDB";
+  GRANT DEBUG ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "BSG_READ_RBL_STGDB";
+  GRANT DEBUG ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "STD_FIN_RBL_STGDB";
+  GRANT DEBUG ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "RBL_STGDB";
+  GRANT DEBUG ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "ETL_TEMP_RBL_TEMPDB";
+  GRANT DEBUG ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "RBL_TEMPDB";
+  GRANT DEBUG ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "STG_FIN_RBL_STGDB";
+  GRANT DEBUG ON "MAIN_PRO"."GOVTGURCOVERAMOUNT" TO "ADF_CDR_RBL_STGDB";

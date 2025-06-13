@@ -1,0 +1,17 @@
+--------------------------------------------------------
+--  DDL for Table STAGE_SYB12_SYSCOMMENTS
+--------------------------------------------------------
+
+  CREATE GLOBAL TEMPORARY TABLE "ACL_RBL_MISDB_PROD"."STAGE_SYB12_SYSCOMMENTS" 
+   (	"SVRID_FK" NUMBER, 
+	"DBID_GEN_FK" NUMBER, 
+	"ID_GEN_FK" NUMBER, 
+	"ID" NUMBER, 
+	"DB_NUMBER" NUMBER, 
+	"COLID" NUMBER, 
+	"TEXTTYPE" NUMBER, 
+	"LANGUAGE" NUMBER, 
+	"TEXT" VARCHAR2(255 CHAR), 
+	"COLID2" NUMBER, 
+	"STATUS" NUMBER
+   ) ON COMMIT PRESERVE ROWS ;

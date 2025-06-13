@@ -1,0 +1,426 @@
+--------------------------------------------------------
+--  DDL for Procedure DPD_CALCULATION_HISTDATA_NEW
+--------------------------------------------------------
+set define off;
+
+  CREATE OR REPLACE EDITIONABLE PROCEDURE "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" 
+AS
+   v_Timekey NUMBER(10,0) := (26376);
+   v_Date VARCHAR2(200) := ( SELECT Date_ 
+     FROM Automate_Advances 
+    WHERE  Timekey = v_Timekey );
+   v_LastQtrDateKey NUMBER(10,0) := ( SELECT LastQtrDateKey 
+     FROM SysDayMatrix 
+    WHERE  timekey IN ( v_Timekey )
+    );
+
+BEGIN
+
+   IF  --SQLDEV: NOT RECOGNIZED
+   IF DPD2  --SQLDEV: NOT RECOGNIZED
+   DELETE FROM DPD2;
+   UTILS.IDENTITY_RESET('DPD2');
+
+   INSERT INTO DPD2 SELECT CustomerACID ,
+                           AccountEntityid ,
+                           B.SourceSystemCustomerID ,
+                           B.IntNotServicedDt ,
+                           ( SELECT Date_ 
+                             FROM Automate_Advances 
+                            WHERE  Timekey = v_Timekey ) Process_Date  ,
+                           A.UCIF_ID ,
+                           LastCrDate ,
+                           ContiExcessDt ,
+                           OverDueSinceDt ,
+                           ReviewDueDt ,
+                           StockStDt ,
+                           PrincOverdueSinceDt ,
+                           IntOverdueSinceDt ,
+                           OtherOverdueSinceDt ,
+                           DebitSinceDt ,
+                           RefPeriodIntService ,
+                           RefPeriodNoCredit ,
+                           RefPeriodOverDrawn ,
+                           RefPeriodOverdue ,
+                           RefPeriodReview ,
+                           RefPeriodStkStatement ,
+                           A.DegDate ,
+                           b.EffectiveFromTimeKey ,
+                           b.EffectiveToTimeKey ,
+                           B.SourceAlt_Key 
+        FROM PRO_RBL_MISDB_PROD.AccountCal_Hist B
+               JOIN PRO_RBL_MISDB_PROD.CustomerCal_Hist A   ON A.CustomerEntityID = B.CustomerEntityID
+       WHERE  A.EffectiveFromTimeKey <= v_Timekey
+                AND A.EffectiveToTimeKey >= v_Timekey
+                AND B.EffectiveFromTimeKey <= v_Timekey
+                AND B.EffectiveToTimeKey >= v_Timekey;
+
+   EXECUTE IMMEDIATE ' ALTER TABLE DPD2 
+      ADD ( [DPD_IntService NUMBER(10,0) , DPD_NoCredit NUMBER(10,0) , DPD_Overdrawn NUMBER(10,0) , DPD_Overdue NUMBER(10,0) , DPD_Renewal NUMBER(10,0) , DPD_StockStmt NUMBER(10,0) , DPD_PrincOverdue NUMBER(10,0) , DPD_IntOverdueSince NUMBER(10,0) , DPD_OtherOverdueSince NUMBER(10,0) , DPD_MAX NUMBER(10,0) ] ) ';
+   /*------------------INITIAL ALL DPD 0 FOR RE-PROCESSING------------------------------- */
+   MERGE INTO A 
+   USING (SELECT A.ROWID row_id, 0, 0, 0, 0, 0, 0, 0, 0, 0
+   FROM A ,DPD2 a ) src
+   ON ( A.ROWID = src.row_id )
+   WHEN MATCHED THEN UPDATE SET A.DPD_IntService = 0,
+                                A.DPD_NoCredit = 0,
+                                A.DPD_Overdrawn = 0,
+                                A.DPD_Overdue = 0,
+                                A.DPD_Renewal = 0,
+                                A.DPD_StockStmt = 0,
+                                a.DPD_PrincOverdue = 0,
+                                a.DPD_IntOverdueSince = 0,
+                                a.DPD_OtherOverdueSince = 0;
+   --select * from DPD2
+   --------
+   IF v_TIMEKEY > 26267 THEN
+
+    ----IMPLEMENTED FROM 2021-12-01 
+   BEGIN
+      MERGE INTO A 
+      USING (SELECT A.ROWID row_id, (CASE 
+      WHEN A.IntNotServicedDt IS NOT NULL THEN utils.datediff('DAY', A.IntNotServicedDt, Process_Date) + 1
+      ELSE 0
+         END) AS pos_2, CASE 
+      WHEN ( DebitSinceDt IS NULL
+        OR utils.datediff('DAY', DebitSinceDt, Process_Date) > 90 ) THEN (CASE 
+                                                                               WHEN A.LastCrDate IS NOT NULL THEN utils.datediff('DAY', A.LastCrDate, Process_Date) + 1
+      ELSE 0
+         END)
+      ELSE 0
+         END AS pos_3, (CASE 
+      WHEN A.ContiExcessDt IS NOT NULL THEN utils.datediff('DAY', A.ContiExcessDt, Process_Date) + 1
+      ELSE 0
+         END) AS pos_4, CASE 
+      WHEN v_TIMEKEY > 26372 THEN (CASE 
+                                        WHEN A.OverDueSinceDt IS NOT NULL THEN utils.datediff('DAY', A.OverDueSinceDt, Process_Date) + 1
+      ELSE 0
+         END)
+      ELSE (CASE 
+      WHEN A.OverDueSinceDt IS NOT NULL THEN utils.datediff('DAY', A.OverDueSinceDt, Process_Date) + (CASE 
+                                                                                                           WHEN SourceAlt_Key = 6 THEN 0
+      ELSE 1
+         END)
+      ELSE 0
+         END)
+         END AS pos_5, (CASE 
+      WHEN A.ReviewDueDt IS NOT NULL THEN utils.datediff('DAY', A.ReviewDueDt, Process_Date) + 1
+      ELSE 0
+         END) AS pos_6, (CASE 
+      WHEN A.StockStDt IS NOT NULL THEN utils.datediff('DAY', A.StockStDt, Process_Date) + 1
+      ELSE 0
+         END) AS pos_7, (CASE 
+      WHEN A.PrincOverdueSinceDt IS NOT NULL THEN utils.datediff('DAY', A.PrincOverdueSinceDt, Process_Date) + 1
+      ELSE 0
+         END) AS pos_8, (CASE 
+      WHEN A.IntOverdueSinceDt IS NOT NULL THEN utils.datediff('DAY', A.IntOverdueSinceDt, Process_Date) + 1
+      ELSE 0
+         END) AS pos_9, (CASE 
+      WHEN A.OtherOverdueSinceDt IS NOT NULL THEN utils.datediff('DAY', A.OtherOverdueSinceDt, Process_Date) + 1
+      ELSE 0
+         END) AS pos_10
+      FROM A ,DPD2 A ) src
+      ON ( A.ROWID = src.row_id )
+      WHEN MATCHED THEN UPDATE SET A.DPD_IntService
+                                   ---             ,A.DPD_NoCredit =  (CASE WHEN  A.LastCrDate IS NOT NULL      THEN DATEDIFF(DAY,A.LastCrDate,  @ProcessDate)       ELSE 0 END)
+                                    = pos_2,
+                                   A.DPD_NoCredit = pos_3,
+                                   A.DPD_Overdrawn = pos_4,
+                                   A.DPD_Overdue
+                                   ------ AMAR - CHANGES ON 17032021 AS PER EMAIL BY ASHISH SIR DATED - 17-03-2021 1:59 PM - SUBJECT - Credit Card NPA Computation  -- 
+                                    = pos_5,
+                                   A.DPD_Renewal = pos_6,
+                                   A.DPD_StockStmt = pos_7,
+                                   A.DPD_PrincOverdue = pos_8,
+                                   A.DPD_IntOverdueSince = pos_9,
+                                   A.DPD_OtherOverdueSince = pos_10;
+
+   END;
+   ELSE
+
+   BEGIN
+      MERGE INTO A 
+      USING (SELECT A.ROWID row_id, (CASE 
+      WHEN A.PrincOverdueSinceDt IS NOT NULL THEN utils.datediff('DAY', A.PrincOverdueSinceDt, Process_Date)
+      ELSE 0
+         END) AS pos_2, (CASE 
+      WHEN A.IntOverdueSinceDt IS NOT NULL THEN utils.datediff('DAY', A.IntOverdueSinceDt, Process_Date)
+      ELSE 0
+         END) AS pos_3, (CASE 
+      WHEN A.OtherOverdueSinceDt IS NOT NULL THEN utils.datediff('DAY', A.OtherOverdueSinceDt, Process_Date)
+      ELSE 0
+         END) AS pos_4, (CASE 
+      WHEN A.IntNotServicedDt IS NOT NULL THEN utils.datediff('DAY', A.IntNotServicedDt, Process_Date)
+      ELSE 0
+         END) AS pos_5, CASE 
+      WHEN ( DebitSinceDt IS NULL
+        OR utils.datediff('DAY', DebitSinceDt, Process_Date) > 90 ) THEN (CASE 
+                                                                               WHEN A.LastCrDate IS NOT NULL THEN utils.datediff('DAY', A.LastCrDate, Process_Date)
+      ELSE 0
+         END)
+      ELSE 0
+         END AS pos_6, (CASE 
+      WHEN A.ContiExcessDt IS NOT NULL THEN utils.datediff('DAY', A.ContiExcessDt, Process_Date) + 1
+      ELSE 0
+         END) AS pos_7, (CASE 
+      WHEN A.OverDueSinceDt IS NOT NULL THEN utils.datediff('DAY', A.OverDueSinceDt, Process_Date)
+      ELSE 0
+         END) AS pos_8, (CASE 
+      WHEN A.ReviewDueDt IS NOT NULL THEN utils.datediff('DAY', A.ReviewDueDt, Process_Date)
+      ELSE 0
+         END) AS pos_9, (CASE 
+      WHEN A.StockStDt IS NOT NULL THEN utils.datediff('DAY', A.StockStDt, Process_Date)
+      ELSE 0
+         END) AS pos_10
+      FROM A ,DPD2 A ) src
+      ON ( A.ROWID = src.row_id )
+      WHEN MATCHED THEN UPDATE SET A.DPD_PrincOverdue = pos_2,
+                                   A.DPD_IntOverdueSince = pos_3,
+                                   A.DPD_OtherOverdueSince = pos_4,
+                                   A.DPD_IntService
+                                   ---             ,A.DPD_NoCredit =  (CASE WHEN  A.LastCrDate IS NOT NULL      THEN DATEDIFF(DAY,A.LastCrDate,  @ProcessDate)       ELSE 0 END)
+                                    = pos_5,
+                                   A.DPD_NoCredit = pos_6,
+                                   A.DPD_Overdrawn = pos_7,
+                                   A.DPD_Overdue = pos_8,
+                                   A.DPD_Renewal = pos_9,
+                                   A.DPD_StockStmt = pos_10;
+
+   END;
+   END IF;
+   /*--------------IF ANY DPD IS NEGATIVE THEN ZERO---------------------------------*/
+   UPDATE DPD2
+      SET DPD_IntService = 0
+    WHERE  NVL(DPD_IntService, 0) < 0;
+   UPDATE DPD2
+      SET DPD_NoCredit = 0
+    WHERE  NVL(DPD_NoCredit, 0) < 0;
+   UPDATE DPD2
+      SET DPD_Overdrawn = 0
+    WHERE  NVL(DPD_Overdrawn, 0) < 0;
+   UPDATE DPD2
+      SET DPD_Overdue = 0
+    WHERE  NVL(DPD_Overdue, 0) < 0;
+   UPDATE DPD2
+      SET DPD_Renewal = 0
+    WHERE  NVL(DPD_Renewal, 0) < 0;
+   UPDATE DPD2
+      SET DPD_StockStmt = 0
+    WHERE  NVL(DPD_StockStmt, 0) < 0;
+   UPDATE DPD2
+      SET DPD_PrincOverdue = 0
+    WHERE  NVL(DPD_PrincOverdue, 0) < 0;
+   UPDATE DPD2
+      SET DPD_IntOverdueSince = 0
+    WHERE  NVL(DPD_IntOverdueSince, 0) < 0;
+   UPDATE DPD2
+      SET DPD_OtherOverdueSince = 0
+    WHERE  NVL(DPD_OtherOverdueSince, 0) < 0;
+   /*------------DPD IS ZERO FOR ALL ACCOUNT DUE TO LASTCRDATE ------------------------------------*/
+   --UPDATE A SET DPD_NoCredit=0 FROM DPD2 A 
+   /* CALCULATE MAX DPD */
+   IF utils.object_id('TEMPDB..tt_TEMPTABLE_46') IS NOT NULL THEN
+    EXECUTE IMMEDIATE ' TRUNCATE TABLE tt_TEMPTABLE_46 ';
+   END IF;
+   DELETE FROM tt_TEMPTABLE_46;
+   UTILS.IDENTITY_RESET('tt_TEMPTABLE_46');
+
+   INSERT INTO tt_TEMPTABLE_46 ( 
+   	SELECT A.CustomerACID ,
+           CASE 
+                WHEN NVL(A.DPD_IntService, 0) >= NVL(A.RefPeriodIntService, 0) THEN A.DPD_IntService
+           ELSE 0
+              END DPD_IntService  ,
+           CASE 
+                WHEN NVL(A.DPD_NoCredit, 0) >= NVL(A.RefPeriodNoCredit, 0) THEN A.DPD_NoCredit
+           ELSE 0
+              END DPD_NoCredit  ,
+           CASE 
+                WHEN NVL(A.DPD_Overdrawn, 0) >= NVL(A.RefPeriodOverDrawn, 0) THEN A.DPD_Overdrawn
+           ELSE 0
+              END DPD_Overdrawn  ,
+           CASE 
+                WHEN NVL(A.DPD_Overdue, 0) >= NVL(A.RefPeriodOverdue, 0) THEN A.DPD_Overdue
+           ELSE 0
+              END DPD_Overdue  ,
+           CASE 
+                WHEN NVL(A.DPD_Renewal, 0) >= NVL(A.RefPeriodReview, 0) THEN A.DPD_Renewal
+           ELSE 0
+              END DPD_Renewal  ,
+           CASE 
+                WHEN NVL(A.DPD_StockStmt, 0) >= NVL(A.RefPeriodStkStatement, 0) THEN A.DPD_StockStmt
+           ELSE 0
+              END DPD_StockStmt  
+
+   	  --FROM PRO.ACCOUNTCAL A inner join pro.CustomerCal B on a.RefCustomerID=b.RefCustomerID
+   	  FROM DPD2 A
+             JOIN PRO_RBL_MISDB_PROD.CustomerCal_Hist B   ON A.SourceSystemCustomerID = B.SourceSystemCustomerID
+   	 WHERE  ( NVL(DPD_IntService, 0) >= NVL(RefPeriodIntService, 0)
+              OR NVL(DPD_NoCredit, 0) >= NVL(RefPeriodNoCredit, 0)
+              OR NVL(DPD_Overdrawn, 0) >= NVL(RefPeriodOverDrawn, 0)
+              OR NVL(DPD_Overdue, 0) >= NVL(RefPeriodOverdue, 0)
+              OR NVL(DPD_Renewal, 0) >= NVL(RefPeriodReview, 0)
+              OR NVL(DPD_StockStmt, 0) >= NVL(RefPeriodStkStatement, 0) )
+              AND ( NVL(B.FlgProcessing, 'N') = 'N' )
+              AND B.EffectiveFromTimeKey <= v_Timekey
+              AND B.EffectiveToTimeKey >= v_Timekey );
+   --and A.RefCustomerID<>'0'
+   /*--------------INTIAL MAX DPD 0 FOR RE PROCESSING DATA-------------------------*/
+   MERGE INTO A 
+   USING (SELECT A.ROWID row_id, 0
+   FROM A ,DPD2 A ) src
+   ON ( A.ROWID = src.row_id )
+   WHEN MATCHED THEN UPDATE SET A.DPD_Max = 0;
+   --inner join PRO.CUSTOMERCAL B on A.RefCustomerID=B.RefCustomerID
+   --WHERE  isnull(B.FlgProcessing,'N')='N'  
+   /*----------------FIND MAX DPD---------------------------------------*/
+   MERGE INTO A 
+   USING (SELECT A.ROWID row_id, (CASE 
+   WHEN ( NVL(A.DPD_IntService, 0) >= NVL(A.DPD_NoCredit, 0)
+     AND NVL(A.DPD_IntService, 0) >= NVL(A.DPD_Overdrawn, 0)
+     AND NVL(A.DPD_IntService, 0) >= NVL(A.DPD_Overdue, 0)
+     AND NVL(A.DPD_IntService, 0) >= NVL(A.DPD_Renewal, 0)
+     AND NVL(A.DPD_IntService, 0) >= NVL(A.DPD_StockStmt, 0)
+     AND NVL(A.DPD_IntService, 0) >= NVL(A.DPD_PrincOverdue, 0)
+     AND NVL(A.DPD_IntService, 0) >= NVL(A.DPD_IntOverdueSince, 0)
+     AND NVL(A.DPD_IntService, 0) >= NVL(A.DPD_OtherOverdueSince, 0) ) THEN NVL(A.DPD_IntService, 0)
+   WHEN ( NVL(A.DPD_NoCredit, 0) >= NVL(A.DPD_IntService, 0)
+     AND NVL(A.DPD_NoCredit, 0) >= NVL(A.DPD_Overdrawn, 0)
+     AND NVL(A.DPD_NoCredit, 0) >= NVL(A.DPD_Overdue, 0)
+     AND NVL(A.DPD_NoCredit, 0) >= NVL(A.DPD_Renewal, 0)
+     AND NVL(A.DPD_NoCredit, 0) >= NVL(A.DPD_StockStmt, 0)
+     AND NVL(A.DPD_NoCredit, 0) >= NVL(A.DPD_PrincOverdue, 0)
+     AND NVL(A.DPD_NoCredit, 0) >= NVL(A.DPD_IntOverdueSince, 0)
+     AND NVL(A.DPD_NoCredit, 0) >= NVL(A.DPD_OtherOverdueSince, 0) ) THEN NVL(A.DPD_NoCredit, 0)
+   WHEN ( NVL(A.DPD_Overdrawn, 0) >= NVL(A.DPD_NoCredit, 0)
+     AND NVL(A.DPD_Overdrawn, 0) >= NVL(A.DPD_IntService, 0)
+     AND NVL(A.DPD_Overdrawn, 0) >= NVL(A.DPD_Overdue, 0)
+     AND NVL(A.DPD_Overdrawn, 0) >= NVL(A.DPD_Renewal, 0)
+     AND NVL(A.DPD_Overdrawn, 0) >= NVL(A.DPD_StockStmt, 0)
+     AND NVL(A.DPD_Overdrawn, 0) >= NVL(A.DPD_PrincOverdue, 0)
+     AND NVL(A.DPD_Overdrawn, 0) >= NVL(A.DPD_IntOverdueSince, 0)
+     AND NVL(A.DPD_Overdrawn, 0) >= NVL(A.DPD_OtherOverdueSince, 0) ) THEN NVL(A.DPD_Overdrawn, 0)
+   WHEN ( NVL(A.DPD_Renewal, 0) >= NVL(A.DPD_NoCredit, 0)
+     AND NVL(A.DPD_Renewal, 0) >= NVL(A.DPD_IntService, 0)
+     AND NVL(A.DPD_Renewal, 0) >= NVL(A.DPD_Overdrawn, 0)
+     AND NVL(A.DPD_Renewal, 0) >= NVL(A.DPD_Overdue, 0)
+     AND NVL(A.DPD_Renewal, 0) >= NVL(A.DPD_StockStmt, 0)
+     AND NVL(A.DPD_Renewal, 0) >= NVL(A.DPD_PrincOverdue, 0)
+     AND NVL(A.DPD_Renewal, 0) >= NVL(A.DPD_IntOverdueSince, 0)
+     AND NVL(A.DPD_Renewal, 0) >= NVL(A.DPD_OtherOverdueSince, 0) ) THEN NVL(A.DPD_Renewal, 0)
+   WHEN ( NVL(A.DPD_Overdue, 0) >= NVL(A.DPD_NoCredit, 0)
+     AND NVL(A.DPD_Overdue, 0) >= NVL(A.DPD_IntService, 0)
+     AND NVL(A.DPD_Overdue, 0) >= NVL(A.DPD_Overdrawn, 0)
+     AND NVL(A.DPD_Overdue, 0) >= NVL(A.DPD_Renewal, 0)
+     AND NVL(A.DPD_Overdue, 0) >= NVL(A.DPD_StockStmt, 0)
+     AND NVL(A.DPD_Overdue, 0) >= NVL(A.DPD_PrincOverdue, 0)
+     AND NVL(A.DPD_Overdue, 0) >= NVL(A.DPD_IntOverdueSince, 0)
+     AND NVL(A.DPD_Overdue, 0) >= NVL(A.DPD_OtherOverdueSince, 0) ) THEN NVL(A.DPD_Overdue, 0)
+   WHEN ( NVL(A.DPD_StockStmt, 0) >= NVL(A.DPD_NoCredit, 0)
+     AND NVL(A.DPD_StockStmt, 0) >= NVL(A.DPD_IntService, 0)
+     AND NVL(A.DPD_StockStmt, 0) >= NVL(A.DPD_Overdrawn, 0)
+     AND NVL(A.DPD_StockStmt, 0) >= NVL(A.DPD_Renewal, 0)
+     AND NVL(A.DPD_StockStmt, 0) >= NVL(A.DPD_Overdue, 0)
+     AND NVL(A.DPD_StockStmt, 0) >= NVL(A.DPD_PrincOverdue, 0)
+     AND NVL(A.DPD_StockStmt, 0) >= NVL(A.DPD_IntOverdueSince, 0)
+     AND NVL(A.DPD_StockStmt, 0) >= NVL(A.DPD_OtherOverdueSince, 0) ) THEN NVL(A.DPD_StockStmt, 0)
+   WHEN ( NVL(A.DPD_PrincOverdue, 0) >= NVL(A.DPD_NoCredit, 0)
+     AND NVL(A.DPD_PrincOverdue, 0) >= NVL(A.DPD_IntService, 0)
+     AND NVL(A.DPD_PrincOverdue, 0) >= NVL(A.DPD_Overdrawn, 0)
+     AND NVL(A.DPD_PrincOverdue, 0) >= NVL(A.DPD_Renewal, 0)
+     AND NVL(A.DPD_PrincOverdue, 0) >= NVL(A.DPD_StockStmt, 0)
+     AND NVL(A.DPD_PrincOverdue, 0) >= NVL(A.DPD_Overdue, 0)
+     AND NVL(A.DPD_PrincOverdue, 0) >= NVL(A.DPD_IntOverdueSince, 0)
+     AND NVL(A.DPD_PrincOverdue, 0) >= NVL(A.DPD_OtherOverdueSince, 0) ) THEN NVL(DPD_PrincOverdue, 0)
+   WHEN ( NVL(A.DPD_IntOverdueSince, 0) >= NVL(A.DPD_NoCredit, 0)
+     AND NVL(A.DPD_IntOverdueSince, 0) >= NVL(A.DPD_IntService, 0)
+     AND NVL(A.DPD_IntOverdueSince, 0) >= NVL(A.DPD_Overdrawn, 0)
+     AND NVL(A.DPD_IntOverdueSince, 0) >= NVL(A.DPD_Renewal, 0)
+     AND NVL(A.DPD_IntOverdueSince, 0) >= NVL(A.DPD_StockStmt, 0)
+     AND NVL(A.DPD_IntOverdueSince, 0) >= NVL(A.DPD_Overdue, 0)
+     AND NVL(A.DPD_IntOverdueSince, 0) >= NVL(A.DPD_PrincOverdue, 0)
+     AND NVL(A.DPD_IntOverdueSince, 0) >= NVL(A.DPD_OtherOverdueSince, 0) ) THEN NVL(A.DPD_IntOverdueSince, 0)
+   ELSE NVL(A.DPD_OtherOverdueSince, 0)
+      END) AS DPD_Max
+   FROM A ,DPD2 a
+        --INNER JOIN PRO.CUSTOMERCAL C ON C.RefCustomerID=a.RefCustomerID
+
+          JOIN PRO_RBL_MISDB_PROD.CustomerCal_Hist C   ON C.SourceSystemCustomerID = a.SourceSystemCustomerID 
+    WHERE ( NVL(C.FlgProcessing, 'N') = 'N' )
+     AND ( NVL(A.DPD_IntService, 0) > 0
+     OR NVL(A.DPD_Overdrawn, 0) > 0
+     OR NVL(A.DPD_Overdue, 0) > 0
+     OR NVL(A.DPD_Renewal, 0) > 0
+     OR NVL(A.DPD_StockStmt, 0) > 0
+     OR NVL(DPD_NoCredit, 0) > 0 )
+     AND C.EffectiveFromTimeKey <= v_Timekey
+     AND C.EffectiveToTimeKey >= v_Timekey) src
+   ON ( A.ROWID = src.row_id )
+   WHEN MATCHED THEN UPDATE SET A.DPD_Max = src.DPD_Max;----SELECT c.Process_Date as DateofData,a.UCIF_ID,a.RefCustomerID CustomerID,a.CustomerAcID AccountID,
+   ----c.dpd_renewal ReviewRenewalDPD,c.dpd_stockstmt StockStatementDPD,c.dpd_nocredit NoCreditDPD,dpd_overdrawn ContinuousExcessDPD,
+   ----dpd_overdue OverdueDPD,
+   ----a.DebitSinceDt,c.dpd_princoverdue PrincipleOverdue,c.DPD_intoverduesince InterestOverdue,c.dpd_intservice OutofOrderDPD
+   --select a.CustomerAcID,b.* from Dpd2 a
+   --inner join 
+   --(select a.UCIF_ID,max(dpd_max) Max_DPD FROM  pro.AccountCal_Hist a
+   ----inner join     ACCOUNTFORDPD b
+   ----on             a.CustomerAcID=b.account_no
+   --inner join     DPD2 c
+   --on             a.CustomerAcID=c.CustomerAcID
+   --and            C.EffectiveFromTimeKey <=26298 and C.EffectiveToTimeKey >= 26298
+   --where          a.EffectiveFromTimeKey <=26298 and a.EffectiveToTimeKey >= 26298
+   -- and a.CustomerAcID in ('809002852750',	'809002834428',	'809001486666',	'809002927113',	'809002900888',	'809002293553',	'809002637746',	'809002797518',	'809002763353',	'809002681152',	'809002531839',	'809001615806',	'809002711170',	'809002909911',	'809001614571',	'809001825359',	'809002348901',	'809001348834',	'809002313879',	'809002944028',	'809002241059',	'809002825396',	'809002837986',	'809002467589',	'809002091234',	'809002687260',	'809001633978',	'809002916261',	'809002117743',	'809002126035',	'809002932025',	'809002347485',	'809002422700',	'809001486635',	'809001614557',	'809002215579',	'809002754917',	'809002320136',	'809001928203',	'809002131480',	'809002158142',	'809002552933',	'809002787250',	'809002264119',	'809002986257',	'809002126288',	'809002663080',	'809002891490',	'809001726847',	'809002176757',	'809001617428',	'809002378991',	'BLHYD011200046694',	'Z00UNLF_01303002',	'Z00RXSE_01313905',	'Z00TUT6_01315202',	'ZC94423_01316904',	'Z00WG28_01313808',	'Z00UNK2_01315202',	'Z00U0WB_01314205',	'Z00UL19_01314204',	'Z00X96D_01313701',	'Z015EOO_01313803',	'Z00SN5Y_01314201',	'Z00T81Y_01314210',	'Z00NLFO_01303002',	'Z00UL19_01314206',	'Z00QY0J_01303006',	'Z00XBQJ_01313906',	'Z016GDG_01313808',	'Z00S6P9_01315204',	'Z00X9G1_01313805',	'Z00S6P9_01315202',	'Z019TY2_01314409',	'Z00YBL1_01313801',	'Z00TS38_01315202',	'Z00UKX1_01315202',	'Z00T6YR_01315202',	'Z00WEG8_01313801',	'Z00SBNK_01315203',	'Z00N9XA_01313803',	'Z00UOHO_01313807',	'Z00XCTW_01313904',	'Z00UP5E_01315203',	'Z00T5JD_01315201',	'Z018C2B_01314401',	'Z00QV1T_01303002',	'Z016LNS_01314402',	'Z00N0FU_01314101',	'Z00W4S4_01313904',	'Z00SJU6_01314201',	'Z014HQO_01314406',	'Z0159R3_01313905',	'Z015CN8_01313803',	'Z00TVPJ_01315202',	'Z01AVMZ_01313902',	'Z00QE6L_01313802',	'Z017MLK_01314703',	'Z00VHKL_01313802',	'Z00WH0V_01313808',	'Z00WX2P_01313806',	'Z00TA12_01313801',	'Z00T5WL_01315201',	'Z00TUBY_01315203',	'Z00RYY0_01313806',	'Z00TR7P_01315201',	'Z00ZE3H_01313906',	'Z00TFSN_01314203',	'Z00Q2JD_01313807',	'Z011WXC_01313801',	'Z015ALP_01314401',	'Z00NO45_01303006',	'Z0188HY_01314801',	'Z00RXSE_01313906',	'Z00ZE3H_01313904',	'Z00W4UZ_01313804',	'Z00REQK_01313802',	'Z00TVIA_01313802',	'Z00WG28_01313809',	'Z00R76Y_01313903',	'Z012KZZ_01313803',	'Z0167O4_01314401',	'Z00U0WB_01314206',	'Z00TUSU_01314201',	'Z011WVT_01313801',	'Z00NUZG_01303004',	'Z00T81Y_01314209',	'Z01B5CR_01313704',	'Z00TN99_01313803',	'Z00ZE25_01313901',	'Z00RWJD_01314201',	'Z00UDEM_01313907',	'Z00Z209_01314401',	'Z00R89A_01315203',	'Z00VHKL_01313809',	'Z00MY1Z_01303001',	'Z00WIH4_01313809',	'Z00PJZV_01313902',	'Z00UP5E_01315201',	'Z00NIU7_01313804',	'Z00NDD2_01313802',	'Z00TN60_01315201',	'Z00UH0S_01315201',	'Z00UKX1_01315205',	'ZC84750_01316901',	'ZC79881_01316903',	'Z00VPIS_01313803',	'Z019I08_01314701',	'Z00NESF_01313903',	'Z016W80_01314401',	'Z00Z099_01314404',	'Z014DGT_01314401',	'Z00XBQJ_01313905',	'Z012ILL_01314401',	'Z00VB2N_01314202',	'Z00XCTV_01313904',	'Z00WUPH_01313902',	'Z0155SC_01313806',	'Z00UKEN_01314201',	'Z00PQ48_01314201',	'ZC95777_01316901',	'Z01AKP2_01313701',	'Z01AKP2_01313702',	'Z014EV5_01314403',	'Z0159R3_01313906',	'Z010FKS_01313807',	'Z016WMD_01314404',	'Z00XI8Y_01313801',	'ZB73308_01317001',	'Z00QHO7_01313806',	'Z00QE40_01313801',	'Z015PBH_01314401',	'Z00TUSU_01314202',	'Z00VMPG_01313803',	'Z00SWFP_01315201',	'Z00TUT1_01315201',	'Z00RBYS_01313801',	'Z00U03B_01314209',	'Z00O3VH_01313901',	'Z015O5M_01314401',	'Z00SJMP_01313701',	'Z00SMPP_01313704',	'Z015EOO_01313802',	'Z00MSRV_01314107',	'Z00UO0O_01314203',	'Z010Q12_01313803',	'Z00UEKI_01314204',	'Z00RYFM_01313705',	'Z00RQX4_01313806',	'Z015OKP_01314402',	'Z012JK8_01313802',	'Z00XBW7_01313802',	'Z00SMLZ_01313804',	'Z019LLB_01313908',	'Z010Q12_01313806',	'Z01A8XI_01314401',	'Z010ZSN_01313905',	'Z0155OP_01313806',	'Z00TWAI_01313802',	'Z012NXU_01313804',	'Z014A3G_01313901',	'Z00TS3L_01315204',	'ZA21968_01313704',	'Z00UFDH_01315202',	'Z015PLW_01314402',	'Z010Q12_01313805',	'Z00WZSA_01313904',	'Z016RXB_01314401',	'Z01AWTV_01313902',	'Z00YSUK_01314409',	'Z00R2QP_01314201',	'Z00XXT1_01313801',	'Z00RWXT_01313801',	'Z00WTQN_01313805',	'Z01AC16_01313801',	'Z00T6NA_01313806',	'Z00TFSN_01314202',	'Z00XCTV_01313905',	'Z00W9L4_01313702',	'Z00RFBZ_01313702',	'Z013TE9_01313907',	'Z00UNJ3_01315204',	'Z00UG1W_01314201',	'Z00SXZ7_01315203',	'Z00R76Y_01313906',	'Z018LCP_01314403',	'ZC39014_01316901',	'Z00TK63_01314202',	'ZB99734_01316902',	'Z00QR0I_01303004',	'Z00RFFM_01313801',	'Z00TBH1_01314202',	'Z00R9JR_01313906',	'Z00TK11_01313905',	'Z015VVJ_01314402',	'Z00S5CO_01314202',	'Z00U2R0_01314204',	'Z0129TC_01313806',	'Z00RQTN_01313902',	'Z00NNWD_01313804',	'Z00UFBH_01315203',	'Z00VL23_01313907',	'ZB70749_01317001',	'Z019IGX_01313805',	'Z00WX33_01313804',	'Z00T5JD_01315204',	'Z00MC0B_01314102',	'Z00OSRM_01314206',	'Z00R88U_01315203',	'Z00SQB0_01315201',	'Z00VEO9_01313803',	'Z01AFS2_01313803',	'Z00SN5Y_01314204',	'Z00UR01_01314202',	'Z01AKBB_01313804',	'ZC62245_01316905',	'Z00PEPA_01313804',	'Z00SGWS_01314204',	'Z00VYAF_01313805',	'Z00SYGC_01314203',	'Z00RXSM_01313905',	'Z00N5VJ_01313705',	'Z00UK3T_01313903')
+   -- group by a.UCIF_ID)B
+   -- on   a.ucif_id=b.UCIF_ID
+   -- --select * from DPD2
+   -- --select * from DPD2
+
+EXCEPTION WHEN OTHERS THEN utils.handleerror(SQLCODE,SQLERRM);
+END;
+
+/
+
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "ROLE_LOCAL_RBL_MISDB_PROD_ORACLE";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "QPI_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "ALERT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "DWH_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "MAIN_PRO";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "BS_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "ACL_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "ROLE_LOCAL_RBL_MISDB_PROD_ORACLE";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "QPI_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "ALERT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "DWH_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "MAIN_PRO";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "BS_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "ACL_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "ROLE_ALL_DB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "CC_CDR_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "RBL_BI_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "BSG_READ_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "STD_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "ETL_TEMP_RBL_TEMPDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "RBL_TEMPDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "STG_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "ADF_CDR_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "ROLE_ALL_DB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "CC_CDR_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "RBL_BI_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "BSG_READ_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "STD_FIN_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "ETL_TEMP_RBL_TEMPDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "RBL_TEMPDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "STG_FIN_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."DPD_CALCULATION_HISTDATA_NEW" TO "ADF_CDR_RBL_STGDB";

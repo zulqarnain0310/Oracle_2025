@@ -1,0 +1,7 @@
+--------------------------------------------------------
+--  Constraints for Table FRAUD_DETAILS
+--------------------------------------------------------
+
+  ALTER TABLE "RBL_MISDB_PROD"."FRAUD_DETAILS" MODIFY ("ENTITYKEY" NOT NULL ENABLE);
+  ALTER TABLE "RBL_MISDB_PROD"."FRAUD_DETAILS" MODIFY ("EFFECTIVEFROMTIMEKEY" NOT NULL ENABLE);
+  ALTER TABLE "RBL_MISDB_PROD"."FRAUD_DETAILS" MODIFY ("EFFECTIVETOTIMEKEY" NOT NULL ENABLE);

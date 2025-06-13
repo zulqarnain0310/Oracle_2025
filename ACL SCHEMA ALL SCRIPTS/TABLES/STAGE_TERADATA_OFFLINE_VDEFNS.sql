@@ -1,0 +1,13 @@
+--------------------------------------------------------
+--  DDL for Table STAGE_TERADATA_OFFLINE_VDEFNS
+--------------------------------------------------------
+
+  CREATE GLOBAL TEMPORARY TABLE "ACL_RBL_MISDB_PROD"."STAGE_TERADATA_OFFLINE_VDEFNS" 
+   (	"INDEX" NUMBER, 
+	"DBNAME" VARCHAR2(256 BYTE), 
+	"VIEWNAME" VARCHAR2(256 BYTE), 
+	"TEXT" CLOB
+   ) ON COMMIT PRESERVE ROWS 
+ LOB ("TEXT") STORE AS BASICFILE (
+  ENABLE STORAGE IN ROW CHUNK 8192 RETENTION 
+  NOCACHE ) ;

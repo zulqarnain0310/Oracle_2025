@@ -1,0 +1,8 @@
+--------------------------------------------------------
+--  Constraints for Table AUDIT_TEMP
+--------------------------------------------------------
+
+  ALTER TABLE "RBL_MISDB_PROD"."AUDIT_TEMP" MODIFY ("ID" NOT NULL ENABLE);
+  ALTER TABLE "RBL_MISDB_PROD"."AUDIT_TEMP" ADD CONSTRAINT "PK__AUDIT_TE__3213E83FF0D26551" PRIMARY KEY ("ID")
+  USING INDEX PCTFREE 10 INITRANS 2 MAXTRANS 255 COMPUTE STATISTICS 
+  TABLESPACE "USERS"  ENABLE;

@@ -1,0 +1,212 @@
+--------------------------------------------------------
+--  DDL for Procedure CO_BORROWER_WORK
+--------------------------------------------------------
+set define off;
+
+  CREATE OR REPLACE EDITIONABLE PROCEDURE "RBL_MISDB_PROD"."CO_BORROWER_WORK" 
+AS
+   --SELECT * FROM tt_CUSTid WHERE CustID='1050612'
+   v_CustCnt NUMBER(5,0) := ( SELECT MAX(rid)  
+     FROM tt_CUSTid  );
+   v_Counter NUMBER(5,0) := 1;
+   v_Acct_Cust_Code NUMBER(10,0) := 11111;
+   v_CustID VARCHAR2(30);
+   v_Acct_Cust_CodeExisting NUMBER(10,0) := 0;
+   --alter table RBL_BorrowerCoborrower_Data_t add CoBorr_AcAssetClassAlt_Key smallint
+   --select * from RBL_BorrowerCoborrower_Data_t
+   v_cursor SYS_REFCURSOR;
+
+BEGIN
+
+   --select  customer_code from RBL_BorrowerCoborrower_Data where customer_type='main' --AccountLinkageGroup
+   --select  * from RBL_BorrowerCoborrower_Data_t  where customer_code='2090248'  OR account_no IN('809002063804','809002756515','809001366760')
+   --ALTER TABLE RBL_BorrowerCoborrower_Data_t ADD CUSTID VARCHAR(30)
+   --SELECT CAST(CAST(customer_code AS BIGINT) AS VARCHAR(30)) FROM RBL_BorrowerCoborrower_Data_t
+   --UPDATE RBL_BorrowerCoborrower_Data_t SET CUSTID= CAST(CAST(customer_code AS BIGINT) AS VARCHAR(30))
+   UPDATE RBL_BorrowerCoborrower_Data_t
+      SET Acct_Cust_Code = NULL;--'1' 
+   --where customer_code='1050612'
+   IF  --SQLDEV: NOT RECOGNIZED
+   IF tt_CUSTid  --SQLDEV: NOT RECOGNIZED
+   DELETE FROM tt_CUSTid;
+   UTILS.IDENTITY_RESET('tt_CUSTid');
+
+   INSERT INTO tt_CUSTid SELECT CUSTID ,
+                                ROW_NUMBER() OVER ( ORDER BY CUSTID  ) RID  
+        FROM ( SELECT DISTINCT CUSTID 
+               FROM RBL_BorrowerCoborrower_Data_t 
+                WHERE  customer_type = 'main' -- AND CUSTID='1050612'
+              ) A;
+   WHILE v_Counter <= v_CustCnt 
+   LOOP 
+
+      BEGIN
+         SELECT CUSTID 
+
+           INTO v_CustID
+           FROM tt_CUSTid 
+          WHERE  RID = v_Counter;
+         ----PRINT @CustID
+         SELECT Acct_Cust_Code 
+
+           INTO v_Acct_Cust_CodeExisting
+           FROM RBL_BorrowerCoborrower_Data_t 
+          WHERE  CUSTID = v_CustID
+                   AND Acct_Cust_Code IS NOT NULL 
+           FETCH FIRST 1 ROWS ONLY;
+         UPDATE RBL_BorrowerCoborrower_Data_t
+            SET Acct_Cust_Code = CASE 
+                                      WHEN NVL(v_Acct_Cust_CodeExisting, 0) > 0 THEN v_Acct_Cust_CodeExisting
+                ELSE v_Acct_Cust_Code
+                   END
+          WHERE  CUSTID = v_CustID;
+         MERGE INTO B 
+         USING (SELECT B.ROWID row_id, CASE 
+         WHEN NVL(v_Acct_Cust_CodeExisting, 0) > 0 THEN v_Acct_Cust_CodeExisting
+         ELSE A.Acct_Cust_Code
+            END AS Acct_Cust_Code
+         FROM B ,RBL_BorrowerCoborrower_Data_t a
+                JOIN RBL_BorrowerCoborrower_Data_t b   ON a.account_no = b.account_no 
+          WHERE a.CUSTID = v_CustID
+           AND B.Acct_Cust_Code IS NULL) src
+         ON ( B.ROWID = src.row_id )
+         WHEN MATCHED THEN UPDATE SET a.Acct_Cust_Code = src.Acct_Cust_Code;
+         MERGE INTO B 
+         USING (SELECT B.ROWID row_id, A.Acct_Cust_Code
+         FROM B ,RBL_BorrowerCoborrower_Data_t a
+                JOIN RBL_BorrowerCoborrower_Data_t b   ON a.CUSTID = b.CUSTID 
+          WHERE A.Acct_Cust_Code IS NOT NULL
+           AND B.Acct_Cust_Code IS NULL) src
+         ON ( B.ROWID = src.row_id )
+         WHEN MATCHED THEN UPDATE SET a.Acct_Cust_Code = src.Acct_Cust_Code;
+         IF NVL(v_Acct_Cust_CodeExisting, 0) = 0 THEN
+
+         BEGIN
+            v_Acct_Cust_Code := v_Acct_Cust_Code + 1 ;
+
+         END;
+         END IF;
+         v_Acct_Cust_CodeExisting := 0 ;
+         v_Counter := v_Counter + 1 ;
+
+      END;
+   END LOOP;
+   ----SELECT * FROM RBL_BorrowerCoborrower_Data_t WHERE Acct_Cust_Code='1' IS NOT NULL ORDER BY Acct_Cust_Code
+   UPDATE RBL_BorrowerCoborrower_Data_t
+      SET CoBorr_CustID = custid
+    WHERE  customer_type = 'CO_OBLIGANT';
+   --select * from RBL_BorrowerCoborrower_Data_t 
+   --where account_no in(select account_no from RBL_BorrowerCoborrower_Data_t where custid='1050612')
+   --order by custid
+   ----select account_no from RBL_BorrowerCoborrower_Data_t where customer_type='main' and custid='1050612'
+   --select * from RBL_BorrowerCoborrower_Data_t 
+   --where  account_no in(select account_no from RBL_BorrowerCoborrower_Data_t where customer_type='main' and custid='1050612')
+   --and customer_type='CO_OBLIGANT'
+   MERGE INTO A 
+   USING (SELECT A.ROWID row_id, b.Balance, b.PrincOutStd, b.TotalProvision
+   FROM A ,RBL_BorrowerCoborrower_Data_t a
+          JOIN PRO_RBL_MISDB_PROD.AccountCal_Main b   ON a.CustomerACid = b.customeracid ) src
+   ON ( A.ROWID = src.row_id )
+   WHEN MATCHED THEN UPDATE SET a.Balance = src.Balance,
+                                a.Principal_OS = src.PrincOutStd,
+                                a.TotalProv = src.TotalProvision;
+   WITH cte_Acct_Cust_Code_ACL AS ( SELECT Acct_Cust_Code ,
+                                           MAX(AcAssetClassAlt_Key)  AcAssetClassAlt_Key  
+     FROM RBL_BorrowerCoborrower_Data_t 
+     GROUP BY Acct_Cust_Code ) 
+      MERGE INTO A 
+      USING (SELECT A.ROWID row_id, b.AcAssetClassAlt_Key
+      FROM A ,RBL_BorrowerCoborrower_Data_t a
+             JOIN cte_Acct_Cust_Code_ACL b   ON A.Acct_Cust_Code = b.Acct_Cust_Code ) src
+      ON ( A.ROWID = src.row_id )
+      WHEN MATCHED THEN UPDATE SET Acct_Cust_Code_AssetClassAlt_Key = src.AcAssetClassAlt_Key
+      ;
+   WITH cte_Acct_Cust_Code_ACL AS ( SELECT Acct_Cust_Code ,
+                                           MAX(AcAssetClassAlt_Key)  AcAssetClassAlt_Key  
+     FROM RBL_BorrowerCoborrower_Data_t 
+     GROUP BY Acct_Cust_Code ) 
+      MERGE INTO A 
+      USING (SELECT A.ROWID row_id, b.AcAssetClassAlt_Key
+      FROM A ,RBL_BorrowerCoborrower_Data_t a
+             JOIN cte_Acct_Cust_Code_ACL b   ON A.Acct_Cust_Code = b.Acct_Cust_Code ) src
+      ON ( A.ROWID = src.row_id )
+      WHEN MATCHED THEN UPDATE SET Acct_Cust_Code_AssetClassAlt_Key = src.AcAssetClassAlt_Key
+      ;
+   OPEN  v_cursor FOR
+      WITH CTE_COBORR_ACL AS ( SELECT CoBorr_CustID ,
+                                      MAX(AcAssetClassAlt_Key)  AcAssetClassAlt_Key  
+     FROM RBL_BorrowerCoborrower_Data_t 
+    WHERE  customer_type = 'CO_OBLIGANT'
+     GROUP BY CoBorr_CustID ) 
+
+      --update a set CoBorr_AcAssetClassAlt_Key= b.AcAssetClassAlt_Key
+      SELECT CoBorr_AcAssetClassAlt_Key ,
+             b.AcAssetClassAlt_Key 
+        FROM RBL_BorrowerCoborrower_Data_t a
+               JOIN cte_coborr_ACL b   ON A.CUSTID = b.CoBorr_CustID
+       WHERE  A.customer_type = 'MAIN'
+   ;
+   DBMS_SQL.RETURN_RESULT(v_cursor)    ;
+   --ALTER TABLE RBL_BorrowerCoborrower_Data_t ADD Balance decimal(18,2), Principal_OS decimal(18,2), TotalProv decimal(18,2)
+   OPEN  v_cursor FOR
+      SELECT * 
+        FROM RBL_BorrowerCoborrower_Data_t 
+       WHERE  NVL(AcAssetClassAlt_Key, 1) = 1
+                AND NVL(Acct_Cust_Code_AssetClassAlt_Key, 1) > 1 ;
+      DBMS_SQL.RETURN_RESULT(v_cursor);
+   OPEN  v_cursor FOR
+      SELECT * 
+        FROM RBL_BorrowerCoborrower_Data_t 
+       WHERE  NVL(AcAssetClassAlt_Key, 1) = 1
+                AND NVL(CoBorr_AcAssetClassAlt_Key, 1) > 1 ;
+      DBMS_SQL.RETURN_RESULT(v_cursor);
+
+EXCEPTION WHEN OTHERS THEN utils.handleerror(SQLCODE,SQLERRM);
+END;
+
+/
+
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "ROLE_LOCAL_RBL_MISDB_PROD_ORACLE";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "QPI_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "ALERT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "DWH_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "MAIN_PRO";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "BS_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "ACL_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "ROLE_LOCAL_RBL_MISDB_PROD_ORACLE";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "QPI_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "ALERT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "DWH_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "MAIN_PRO";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "BS_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "ACL_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "ROLE_ALL_DB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "CC_CDR_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "RBL_BI_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "BSG_READ_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "STD_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "ETL_TEMP_RBL_TEMPDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "RBL_TEMPDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "STG_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "ADF_CDR_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "ROLE_ALL_DB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "CC_CDR_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "RBL_BI_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "BSG_READ_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "STD_FIN_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "ETL_TEMP_RBL_TEMPDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "RBL_TEMPDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "STG_FIN_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."CO_BORROWER_WORK" TO "ADF_CDR_RBL_STGDB";

@@ -1,0 +1,128 @@
+--------------------------------------------------------
+--  DDL for Procedure AUTOMATIONVIEWHISTORY
+--------------------------------------------------------
+set define off;
+
+  CREATE OR REPLACE EDITIONABLE PROCEDURE "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" 
+(
+  v_CustomerID IN VARCHAR2 DEFAULT ' ' 
+)
+AS
+   v_TimeKey NUMBER(10,0);
+   v_cursor SYS_REFCURSOR;
+
+BEGIN
+
+   SELECT Timekey 
+
+     INTO v_Timekey
+     FROM SysDataMatrix 
+    WHERE  CurrentStatus = 'C';
+
+   BEGIN
+      OPEN  v_cursor FOR
+         SELECT A.PAN_No ,
+                A.UCIC_ID ,
+                A.CustomerID ,
+                A.CustomerName ,
+                C.BankingArrangementAlt_Key ,
+                C.ArrangementDescription ,
+                UTILS.CONVERT_TO_VARCHAR2(A.BorrowerDefaultDate,20,p_style=>103) BorrowerDefaultDate  ,
+                A.LeadBankAlt_Key ,
+                B.BankName ,
+                H.ParameterName DefaultStatus  ,
+                D.ExposureBucketAlt_Key ,
+                D.BucketName ,
+                UTILS.CONVERT_TO_VARCHAR2(A.ReferenceDate,20,p_style=>103) ReferenceDate  ,
+                UTILS.CONVERT_TO_VARCHAR2(A.ReviewExpiryDate,20,p_style=>103) ReviewExpiryDate  ,
+                UTILS.CONVERT_TO_VARCHAR2(A.RP_ApprovalDate,20,p_style=>103) RP_ApprovalDate  ,
+                E.RPNatureAlt_Key ,
+                E.RPDescription ,
+                A.If_Other ,
+                UTILS.CONVERT_TO_VARCHAR2(A.RP_ExpiryDate,20,p_style=>103) RP_ExpiryDate  ,
+                UTILS.CONVERT_TO_VARCHAR2(A.RP_ImplDate,20,p_style=>103) RP_ImplDate  ,
+                I.ParameterName RP_ImplStatus  ,
+                A.RP_failed ,
+                UTILS.CONVERT_TO_VARCHAR2(A.Revised_RP_Expiry_Date,20,p_style=>103) Revised_RP_Expiry_Date  ,
+                UTILS.CONVERT_TO_VARCHAR2(A.Actual_Impl_Date,20,p_style=>103) Actual_Impl_Date  ,
+                UTILS.CONVERT_TO_VARCHAR2(A.RP_OutOfDateAllBanksDeadline,20,p_style=>103) RP_OutOfDateAllBanksDeadline  ,
+                A.IsBankExposure ,
+                G.AssetClassAlt_Key ,
+                G.AssetClassName ,
+                UTILS.CONVERT_TO_VARCHAR2(RiskReviewExpiryDate,20,p_style=>103) RiskReviewExpiryDate  ,
+                'RPHIstory' TableName  
+           FROM RP_Portfolio_Details A
+                  LEFT JOIN DimBankRP B   ON A.LeadBankAlt_Key = B.BankRPAlt_Key
+                  JOIN DimBankingArrangement C   ON A.BankingArrangementAlt_Key = C.BankingArrangementAlt_Key
+                  JOIN DimExposureBucket D   ON A.ExposureBucketAlt_Key = D.ExposureBucketAlt_Key
+                  JOIN DimResolutionPlanNature E   ON A.RPNatureAlt_Key = E.RPNatureAlt_Key
+                  JOIN DimAssetClass G   ON A.AssetClassAlt_Key = G.AssetClassAlt_Key
+                  JOIN ( SELECT ParameterAlt_Key ,
+                                ParameterName ,
+                                'BorrowerDefaultStatus' Tablename  
+                         FROM DimParameter 
+                          WHERE  DimParameterName = 'BorrowerDefaultStatus'
+                                   AND EffectiveFromTimeKey <= v_TimeKey
+                                   AND EffectiveToTimeKey >= v_TimeKey ) H   ON H.ParameterAlt_Key = A.DefaultStatusAlt_Key
+                  JOIN ( SELECT ParameterAlt_Key ,
+                                ParameterName ,
+                                'ImplementationStatus' Tablename  
+                         FROM DimParameter 
+                          WHERE  DimParameterName = 'ImplementationStatus'
+                                   AND EffectiveFromTimeKey <= v_TimeKey
+                                   AND EffectiveToTimeKey >= v_TimeKey ) I   ON I.ParameterAlt_Key = A.RP_ImplStatusAlt_Key
+          WHERE  A.CustomerID = v_CustomerID
+           ORDER BY A.ReferenceDate ;
+         DBMS_SQL.RETURN_RESULT(v_cursor);
+
+   END;
+
+EXCEPTION WHEN OTHERS THEN utils.handleerror(SQLCODE,SQLERRM);
+END;
+
+/
+
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "ROLE_LOCAL_RBL_MISDB_PROD_ORACLE";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "QPI_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "ALERT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "DWH_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "MAIN_PRO";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "BS_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "ACL_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "ROLE_LOCAL_RBL_MISDB_PROD_ORACLE";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "QPI_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "ALERT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "DWH_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "MAIN_PRO";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "BS_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "ACL_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "ROLE_ALL_DB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "CC_CDR_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "RBL_BI_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "BSG_READ_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "STD_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "ETL_TEMP_RBL_TEMPDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "RBL_TEMPDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "STG_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "ADF_CDR_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "ROLE_ALL_DB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "CC_CDR_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "RBL_BI_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "BSG_READ_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "STD_FIN_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "ETL_TEMP_RBL_TEMPDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "RBL_TEMPDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "STG_FIN_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."AUTOMATIONVIEWHISTORY" TO "ADF_CDR_RBL_STGDB";

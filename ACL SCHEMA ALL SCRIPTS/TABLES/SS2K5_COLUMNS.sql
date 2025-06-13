@@ -1,0 +1,18 @@
+--------------------------------------------------------
+--  DDL for Table SS2K5_COLUMNS
+--------------------------------------------------------
+
+  CREATE GLOBAL TEMPORARY TABLE "ACL_RBL_MISDB_PROD"."SS2K5_COLUMNS" 
+   (	"DB_ID" NUMBER(10,0), 
+	"NAME" VARCHAR2(256 BYTE), 
+	"RULE_OBJECT_ID" NUMBER(10,0), 
+	"COLUMN_ID" NUMBER(10,0), 
+	"MAX_LENGTH" NUMBER(5,0), 
+	"PRECISION" NUMBER(5,0), 
+	"SCALE" NUMBER(5,0), 
+	"IS_NULLABLE" NUMBER(5,0), 
+	"USER_TYPE_ID" NUMBER(10,0), 
+	"SYSTEM_TYPE_ID" NUMBER(5,0), 
+	"DEFAULT_OBJECT_ID" NUMBER(10,0), 
+	"OBJECT_ID" NUMBER(10,0)
+   ) ON COMMIT PRESERVE ROWS ;

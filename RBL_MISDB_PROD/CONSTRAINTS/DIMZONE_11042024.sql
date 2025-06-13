@@ -1,0 +1,7 @@
+--------------------------------------------------------
+--  Constraints for Table DIMZONE_11042024
+--------------------------------------------------------
+
+  ALTER TABLE "RBL_MISDB_PROD"."DIMZONE_11042024" MODIFY ("ZONE_KEY" NOT NULL ENABLE);
+  ALTER TABLE "RBL_MISDB_PROD"."DIMZONE_11042024" MODIFY ("ZONEALT_KEY" NOT NULL ENABLE);
+  ALTER TABLE "RBL_MISDB_PROD"."DIMZONE_11042024" MODIFY ("D2KTIMESTAMP" NOT NULL ENABLE);

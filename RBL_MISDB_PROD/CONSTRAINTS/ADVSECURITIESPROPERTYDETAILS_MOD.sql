@@ -1,0 +1,6 @@
+--------------------------------------------------------
+--  Constraints for Table ADVSECURITIESPROPERTYDETAILS_MOD
+--------------------------------------------------------
+
+  ALTER TABLE "RBL_MISDB_PROD"."ADVSECURITIESPROPERTYDETAILS_MOD" MODIFY ("ENTITYKEY" NOT NULL ENABLE);
+  ALTER TABLE "RBL_MISDB_PROD"."ADVSECURITIESPROPERTYDETAILS_MOD" MODIFY ("D2KTIMESTAMP" NOT NULL ENABLE);

@@ -1,0 +1,168 @@
+--------------------------------------------------------
+--  DDL for Procedure INTERNALDEDUPECUSTOMERBEHAVIOR
+--------------------------------------------------------
+set define off;
+
+  CREATE OR REPLACE EDITIONABLE PROCEDURE "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" 
+AS
+   v_cursor SYS_REFCURSOR;
+
+BEGIN
+
+   IF utils.object_id('TempDB..tt_Account') IS NOT NULL THEN
+    EXECUTE IMMEDIATE ' TRUNCATE TABLE tt_Account ';
+   END IF;
+   DELETE FROM tt_Account;
+   UTILS.IDENTITY_RESET('tt_Account');
+
+   INSERT INTO tt_Account ( 
+   	SELECT CustomerAcID ,
+           MAX(FinalAssetClassAlt_Key)  FinalAssetClassAlt_Key  ,
+           MIN(FinalNpaDt)  FinalNpaDt  
+   	  FROM PRO_RBL_MISDB_PROD.AccountCal_Hist 
+   	  GROUP BY CustomerAcID );
+   IF utils.object_id('TempDB..tt_ClosedAccount') IS NOT NULL THEN
+    EXECUTE IMMEDIATE ' TRUNCATE TABLE tt_ClosedAccount ';
+   END IF;
+   DELETE FROM tt_ClosedAccount;
+   UTILS.IDENTITY_RESET('tt_ClosedAccount');
+
+   INSERT INTO tt_ClosedAccount SELECT * 
+        FROM ( SELECT CustomerAcID ,
+                      b.Date_ closeddate  ,
+                      a.EffectiveFromTimeKey ,
+                      a.EffectiveToTimeKey ,
+                      ROW_NUMBER() OVER ( PARTITION BY CustomerAcID ORDER BY a.effectivefromtimekey DESC  ) rn  
+               FROM AdvAcBasicDetail a
+                      JOIN Automate_Advances b   ON a.EffectiveToTimeKey = b.Timekey
+
+               --where      a.EffectiveToTimeKey<>49999
+               GROUP BY CustomerAcID,b.Date_,a.EffectiveFromTimeKey,a.EffectiveToTimeKey ) Aa
+       WHERE  rn = 1
+                AND EffectiveToTimeKey <> 49999;
+   OPEN  v_cursor FOR
+      SELECT A.UCIF_ID ,
+             B.CustomerName ,
+             B.RefCustomerID ,
+             A.CustomerAcID ,
+             D.SourceName ,
+             'Live' CurrentStatus  ,
+             CASE 
+                  WHEN A.finalAssetclassAlt_key = 1 THEN 'STD'
+             ELSE 'NPA'
+                END Assetclassification  ,
+             A.DPD_Max ,
+             NULL ClosingDate  ,
+             A.FinalNpaDt ,
+             NULL FinacialStress  ,
+             F.SrcSysClassCode MaxAssetclassification  ,
+             E.FinalNpaDt LastNpaDate  ,
+             CASE 
+                  WHEN C.acid IS NOT NULL THEN 'Y'
+             ELSE 'N'
+                END TechnicalWriteoff  ,
+             CASE 
+                  WHEN C.acid IS NOT NULL THEN C.StatusDate
+             ELSE NULL
+                END TechnicalWriteoffDate  ,
+             A.Balance Advances  
+        FROM PRO_RBL_MISDB_PROD.ACCOUNTCAL A
+               JOIN PRO_RBL_MISDB_PROD.CUSTOMERCAL B   ON A.CustomerEntityID = B.CustomerEntityID
+               JOIN DIMSOURCEDB D   ON D.SourceAlt_Key = A.SourceAlt_Key
+               AND D.EffectiveToTimeKey = '49999'
+               LEFT JOIN ExceptionFinalStatusType C   ON C.ACID = A.CustomerAcID
+               AND C.EffectiveToTimeKey = '49999'
+               AND C.StatusType = 'TWO'
+               LEFT JOIN tt_Account E   ON E.CustomerAcID = A.CustomerAcID
+               JOIN DimAssetClass F   ON F.AssetClassAlt_Key = E.FinalAssetClassAlt_Key
+               AND F.EffectiveToTimeKey = 49999
+      UNION 
+      SELECT A.UCIF_ID ,
+             B.CustomerName ,
+             B.RefCustomerID ,
+             A.CustomerAcID ,
+             D.SourceName ,
+             'closed' CurrentStatus  ,
+             CASE 
+                  WHEN A.finalAssetclassAlt_key = 1 THEN 'STD'
+             ELSE 'NPA'
+                END Assetclassification  ,
+             A.DPD_Max ,
+             ab.closeddate ClosingDate  ,
+             A.FinalNpaDt ,
+             NULL FinacialStress  ,
+             F.SrcSysClassCode MaxAssetclassification  ,
+             E.FinalNpaDt LastNpaDate  ,
+             CASE 
+                  WHEN C.acid IS NOT NULL THEN 'Y'
+             ELSE 'N'
+                END TechnicalWriteoff  ,
+             CASE 
+                  WHEN C.acid IS NOT NULL THEN C.StatusDate
+             ELSE NULL
+                END TechnicalWriteoffDate  ,
+             A.Balance Advances  
+        FROM tt_ClosedAccount AB
+               LEFT JOIN PRO_RBL_MISDB_PROD.ACCOUNTCAL A   ON ab.CustomerACID = A.CustomerAcID
+             --and  ab.EffectiveToTimeKey<>49999
+
+               LEFT JOIN PRO_RBL_MISDB_PROD.CUSTOMERCAL B   ON A.CustomerEntityID = B.CustomerEntityID
+               LEFT JOIN DIMSOURCEDB D   ON D.SourceAlt_Key = A.SourceAlt_Key
+               AND D.EffectiveToTimeKey = '49999'
+               LEFT JOIN ExceptionFinalStatusType C   ON C.ACID = A.CustomerAcID
+               AND C.EffectiveToTimeKey = '49999'
+               AND C.StatusType = 'TWO'
+               LEFT JOIN tt_Account E   ON E.CustomerAcID = A.CustomerAcID
+               LEFT JOIN DimAssetClass F   ON F.AssetClassAlt_Key = E.FinalAssetClassAlt_Key
+               AND F.EffectiveToTimeKey = 49999 ;
+      DBMS_SQL.RETURN_RESULT(v_cursor);
+
+EXCEPTION WHEN OTHERS THEN utils.handleerror(SQLCODE,SQLERRM);
+END;
+
+/
+
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "ROLE_LOCAL_RBL_MISDB_PROD_ORACLE";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "QPI_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "ALERT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "DWH_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "MAIN_PRO";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "BS_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "ACL_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "ROLE_LOCAL_RBL_MISDB_PROD_ORACLE";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "QPI_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "ALERT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "DWH_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "MAIN_PRO";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "BS_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "ACL_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "ROLE_ALL_DB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "CC_CDR_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "RBL_BI_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "BSG_READ_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "STD_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "ETL_TEMP_RBL_TEMPDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "RBL_TEMPDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "STG_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "ADF_CDR_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "ROLE_ALL_DB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "CC_CDR_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "RBL_BI_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "BSG_READ_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "STD_FIN_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "ETL_TEMP_RBL_TEMPDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "RBL_TEMPDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "STG_FIN_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."INTERNALDEDUPECUSTOMERBEHAVIOR" TO "ADF_CDR_RBL_STGDB";

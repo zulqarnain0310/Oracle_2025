@@ -1,0 +1,6 @@
+--------------------------------------------------------
+--  Constraints for Table TEMPDERVCANCEL_SOURCESYSTEM
+--------------------------------------------------------
+
+  ALTER TABLE "RBL_TEMPDB"."TEMPDERVCANCEL_SOURCESYSTEM" MODIFY ("EFFECTIVEFROMTIMEKEY" NOT NULL ENABLE);
+  ALTER TABLE "RBL_TEMPDB"."TEMPDERVCANCEL_SOURCESYSTEM" MODIFY ("EFFECTIVETOTIMEKEY" NOT NULL ENABLE);

@@ -1,0 +1,16 @@
+--------------------------------------------------------
+--  DDL for Table STAGE_SYB12_SYSCONSTRAINTS
+--------------------------------------------------------
+
+  CREATE GLOBAL TEMPORARY TABLE "RBL_MISDB_PROD"."STAGE_SYB12_SYSCONSTRAINTS" 
+   (	"SVRID_FK" NUMBER, 
+	"DBID_GEN_FK" NUMBER, 
+	"TABLE_ID_GEN_FK" NUMBER, 
+	"CONSTRAINT_GEN" NUMBER, 
+	"COLID" NUMBER, 
+	"CONSTRID" NUMBER, 
+	"TABLEID" NUMBER, 
+	"ERROR" NUMBER, 
+	"STATUS" NUMBER, 
+	"SPARE2" NUMBER
+   ) ON COMMIT PRESERVE ROWS ;

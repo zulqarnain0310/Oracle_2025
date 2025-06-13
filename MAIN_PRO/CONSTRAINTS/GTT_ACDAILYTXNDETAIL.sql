@@ -1,0 +1,7 @@
+--------------------------------------------------------
+--  Constraints for Table GTT_ACDAILYTXNDETAIL
+--------------------------------------------------------
+
+  ALTER TABLE "MAIN_PRO"."GTT_ACDAILYTXNDETAIL" MODIFY ("ENTITYKEY" NOT NULL ENABLE);
+  ALTER TABLE "MAIN_PRO"."GTT_ACDAILYTXNDETAIL" MODIFY ("CUSTOMERACID" NOT NULL ENABLE);
+  ALTER TABLE "MAIN_PRO"."GTT_ACDAILYTXNDETAIL" MODIFY ("TXNDATE" NOT NULL ENABLE);

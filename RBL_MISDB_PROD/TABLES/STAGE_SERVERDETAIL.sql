@@ -1,0 +1,13 @@
+--------------------------------------------------------
+--  DDL for Table STAGE_SERVERDETAIL
+--------------------------------------------------------
+
+  CREATE GLOBAL TEMPORARY TABLE "RBL_MISDB_PROD"."STAGE_SERVERDETAIL" 
+   (	"SVRID" NUMBER, 
+	"DBURL" VARCHAR2(4000 BYTE), 
+	"DB_NAME" VARCHAR2(4000 BYTE), 
+	"USERNAME" VARCHAR2(255 BYTE), 
+	"PROJECT_ID" NUMBER, 
+	"PROJECT_NAME" VARCHAR2(255 BYTE), 
+	"COMMENTS" VARCHAR2(4000 BYTE)
+   ) ON COMMIT PRESERVE ROWS ;

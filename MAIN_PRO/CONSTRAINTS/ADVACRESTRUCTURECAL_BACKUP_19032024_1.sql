@@ -1,0 +1,6 @@
+--------------------------------------------------------
+--  Constraints for Table ADVACRESTRUCTURECAL_BACKUP_19032024_1
+--------------------------------------------------------
+
+  ALTER TABLE "MAIN_PRO"."ADVACRESTRUCTURECAL_BACKUP_19032024_1" MODIFY ("ENTITYKEY" NOT NULL ENABLE);
+  ALTER TABLE "MAIN_PRO"."ADVACRESTRUCTURECAL_BACKUP_19032024_1" MODIFY ("D2KTIMESTAMP" NOT NULL ENABLE);

@@ -1,0 +1,240 @@
+--------------------------------------------------------
+--  DDL for Procedure EXPIRERECORDS_06122023
+--------------------------------------------------------
+set define off;
+
+  CREATE OR REPLACE EDITIONABLE PROCEDURE "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" 
+AS
+
+BEGIN
+
+   DELETE AdvAcBasicDetail
+
+    WHERE  EffectiveFromTimeKey = 26457;
+   UPDATE AdvAcBasicDetail
+      SET EffectiveToTimekey = 49999
+    WHERE  EffectiveToTimeKey = 26456;
+   DELETE AdvAcBalanceDetail
+
+    WHERE  EffectiveFromTimeKey = 26457;
+   UPDATE AdvAcBalanceDetail
+      SET EffectiveToTimekey = 49999
+    WHERE  EffectiveToTimeKey = 26456;
+   DELETE AdvAcFinancialDetail
+
+    WHERE  EffectiveFromTimeKey = 26457;
+   UPDATE AdvAcFinancialDetail
+      SET EffectiveToTimekey = 49999
+    WHERE  EffectiveToTimeKey = 26456;
+   DELETE AdvCustNPADetail
+
+    WHERE  EffectiveFromTimeKey = 26457;
+   UPDATE AdvCustNPADetail
+      SET EffectiveToTimekey = 49999
+    WHERE  EffectiveToTimeKey = 26456;
+   DELETE CustomerBasicDetail
+
+    WHERE  EffectiveFromTimeKey = 26457;
+   UPDATE CustomerBasicDetail
+      SET EffectiveToTimekey = 49999
+    WHERE  EffectiveToTimeKey = 26456;
+   DELETE AdvCustOtherDetail
+
+    WHERE  EffectiveFromTimeKey = 26457;
+   UPDATE AdvCustOtherDetail
+      SET EffectiveToTimekey = 49999
+    WHERE  EffectiveToTimeKey = 26456;
+   DELETE AdvAcOtherDetail
+
+    WHERE  EffectiveFromTimeKey = 26457;
+   UPDATE AdvAcOtherDetail
+      SET EffectiveToTimekey = 49999
+    WHERE  EffectiveToTimeKey = 26456;
+   DELETE AdvAcOtherFinancialDetail
+
+    WHERE  EffectiveFromTimeKey = 26457;
+   UPDATE AdvAcOtherFinancialDetail
+      SET EffectiveToTimekey = 49999
+    WHERE  EffectiveToTimeKey = 26456;
+   DELETE ADVFACCCDETAIL
+
+    WHERE  EffectiveFromTimeKey = 26457;
+   UPDATE ADVFACCCDETAIL
+      SET EffectiveToTimekey = 49999
+    WHERE  EffectiveToTimeKey = 26456;
+   DELETE AdvFacBillDetail
+
+    WHERE  EffectiveFromTimeKey = 26457;
+   UPDATE AdvFacBillDetail
+      SET EffectiveToTimekey = 49999
+    WHERE  EffectiveToTimeKey = 26456;
+   DELETE ADVFACDLDETAIL
+
+    WHERE  EffectiveFromTimeKey = 26457;
+   UPDATE ADVFACDLDETAIL
+      SET EffectiveToTimekey = 49999
+    WHERE  EffectiveToTimeKey = 26456;
+   DELETE AdvFacPCDetail
+
+    WHERE  EffectiveFromTimeKey = 26457;
+   UPDATE AdvFacPCDetail
+      SET EffectiveToTimekey = 49999
+    WHERE  EffectiveToTimeKey = 26456;
+   DELETE AcDailyTxnDetail
+
+    WHERE  UTILS.CONVERT_TO_VARCHAR2(TxnDate,200) = '08/06/2022';
+   DELETE AdvSecurityDetail
+
+    WHERE  EffectiveFromTimeKey = 26457;
+   UPDATE AdvSecurityDetail
+      SET EffectiveToTimekey = 49999
+    WHERE  EffectiveToTimeKey = 26456;
+   DELETE AdvSecurityValueDetail
+
+    WHERE  EffectiveFromTimeKey = 26457;
+   UPDATE AdvSecurityValueDetail
+      SET EffectiveToTimekey = 49999
+    WHERE  EffectiveToTimeKey = 26456;
+   DELETE InvestmentIssuerDetail
+
+    WHERE  EffectiveFromTimeKey = 26457;
+   UPDATE InvestmentIssuerDetail
+      SET EffectiveToTimekey = 49999
+    WHERE  EffectiveToTimeKey = 26456;
+   DELETE InvestmentIssuerDetail
+
+    WHERE  EffectiveFromTimeKey = 26457;
+   UPDATE InvestmentIssuerDetail
+      SET EffectiveToTimekey = 49999
+    WHERE  EffectiveToTimeKey = 26456;
+   DELETE InvestmentBasicDetail
+
+    WHERE  EffectiveFromTimeKey = 26457;
+   UPDATE InvestmentBasicDetail
+      SET EffectiveToTimekey = 49999
+    WHERE  EffectiveToTimeKey = 26456;
+   DELETE InvestmentFinancialDetail
+
+    WHERE  EffectiveFromTimeKey = 26457;
+   UPDATE InvestmentFinancialDetail
+      SET EffectiveToTimekey = 49999
+    WHERE  EffectiveToTimeKey = 26456;
+   DELETE CurDat_RBL_MISDB_PROD.DerivativeDetail
+
+    WHERE  EffectiveFromTimeKey = 26457;
+   UPDATE CurDat_RBL_MISDB_PROD.DerivativeDetail
+      SET EffectiveToTimekey = 49999
+    WHERE  EffectiveToTimeKey = 26456;
+   DELETE AdvFacCreditCardDetail
+
+    WHERE  EffectiveFromTimeKey = 26457;
+   UPDATE AdvFacCreditCardDetail
+      SET EffectiveToTimekey = 49999
+    WHERE  EffectiveToTimeKey = 26456;
+   DELETE AdvCreditCardBalanceDetail
+
+    WHERE  EffectiveFromTimeKey = 26457;
+   UPDATE AdvCreditCardBalanceDetail
+      SET EffectiveToTimekey = 49999
+    WHERE  EffectiveToTimeKey = 26456;
+   DELETE PRO_RBL_MISDB_PROD.ContExcsSinceDtAccountCal
+
+    WHERE  EffectiveFromTimeKey = 26457;
+   UPDATE PRO_RBL_MISDB_PROD.ContExcsSinceDtAccountCal
+      SET EffectiveToTimekey = 49999
+    WHERE  EffectiveToTimeKey = 26456;
+   DELETE CurDat_RBL_MISDB_PROD.AdvAcWODetail
+
+    WHERE  EffectiveFromTimeKey = 26457;
+   UPDATE CurDat_RBL_MISDB_PROD.AdvAcWODetail
+      SET EffectiveToTimekey = 49999
+    WHERE  EffectiveToTimeKey = 26456;
+   DELETE MetagridAccountMaster
+
+    WHERE  EffectiveFromTimeKey = 26457;
+   UPDATE MetagridAccountMaster
+      SET EffectiveToTimekey = 49999
+    WHERE  EffectiveToTimeKey = 26456;
+   DELETE metagridcustomermaster
+
+    WHERE  EffectiveFromTimeKey = 26457;
+   UPDATE metagridcustomermaster
+      SET EffectiveToTimekey = 49999
+    WHERE  EffectiveToTimeKey = 26456;
+   DELETE metagridSecurity
+
+    WHERE  EffectiveFromTimeKey = 26457;
+   UPDATE metagridSecurity
+      SET EffectiveToTimekey = 49999
+    WHERE  EffectiveToTimeKey = 26456;
+   DELETE PRO_RBL_MISDB_PROD.AccountCal_Hist
+
+    WHERE  EffectiveFromTimeKey = 26457;
+   UPDATE PRO_RBL_MISDB_PROD.AccountCal_Hist
+      SET EffectiveToTimekey = 49999
+    WHERE  EffectiveToTimeKey = 26456;
+   DELETE PRO_RBL_MISDB_PROD.CustomerCal_Hist
+
+    WHERE  EffectiveFromTimeKey = 26457;
+   UPDATE PRO_RBL_MISDB_PROD.CustomerCal_Hist
+      SET EffectiveToTimekey = 49999
+    WHERE  EffectiveToTimeKey = 26456;
+   DELETE PRO_RBL_MISDB_PROD.AdvAcRestructureCal_Hist
+
+    WHERE  EffectiveFromTimeKey = 26457;
+   UPDATE PRO_RBL_MISDB_PROD.AdvAcRestructureCal_Hist
+      SET EffectiveToTimekey = 49999
+    WHERE  EffectiveToTimeKey = 26456;
+   DELETE PRO_RBL_MISDB_PROD.PUI_CAL_hist
+
+    WHERE  EffectiveFromTimeKey = 26457;
+
+EXCEPTION WHEN OTHERS THEN utils.handleerror(SQLCODE,SQLERRM);
+END;
+
+/
+
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "ROLE_LOCAL_RBL_MISDB_PROD_ORACLE";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "QPI_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "ALERT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "DWH_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "MAIN_PRO";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "BS_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "ACL_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "ROLE_LOCAL_RBL_MISDB_PROD_ORACLE";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "QPI_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "ALERT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "DWH_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "MAIN_PRO";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "BS_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "ACL_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "ROLE_ALL_DB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "CC_CDR_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "RBL_BI_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "BSG_READ_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "STD_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "ETL_TEMP_RBL_TEMPDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "RBL_TEMPDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "STG_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "ADF_CDR_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "ROLE_ALL_DB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "CC_CDR_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "RBL_BI_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "BSG_READ_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "STD_FIN_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "ETL_TEMP_RBL_TEMPDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "RBL_TEMPDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "STG_FIN_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXPIRERECORDS_06122023" TO "ADF_CDR_RBL_STGDB";

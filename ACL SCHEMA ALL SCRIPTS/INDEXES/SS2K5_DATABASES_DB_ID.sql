@@ -1,0 +1,5 @@
+--------------------------------------------------------
+--  DDL for Index SS2K5_DATABASES_DB_ID
+--------------------------------------------------------
+
+  CREATE INDEX "ACL_RBL_MISDB_PROD"."SS2K5_DATABASES_DB_ID" ON "ACL_RBL_MISDB_PROD"."SS2K5_DATABASES" ("DB_ID") ;

@@ -1,0 +1,7 @@
+--------------------------------------------------------
+--  DDL for Index PK__CUSTOMER__03D131BC79EFCB33
+--------------------------------------------------------
+
+  CREATE UNIQUE INDEX "PREMOC_RBL_MISDB_PROD"."PK__CUSTOMER__03D131BC79EFCB33" ON "PREMOC_RBL_MISDB_PROD"."CUSTOMERCAL" ("ENTITYKEY") 
+  PCTFREE 10 INITRANS 2 MAXTRANS 255 COMPUTE STATISTICS 
+  TABLESPACE "USERS" ;

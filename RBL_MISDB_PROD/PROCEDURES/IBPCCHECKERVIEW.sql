@@ -1,0 +1,139 @@
+--------------------------------------------------------
+--  DDL for Procedure IBPCCHECKERVIEW
+--------------------------------------------------------
+set define off;
+
+  CREATE OR REPLACE EDITIONABLE PROCEDURE "RBL_MISDB_PROD"."IBPCCHECKERVIEW" 
+(
+  v_MenuID IN NUMBER DEFAULT 10 ,
+  v_UserLoginId IN VARCHAR2 DEFAULT 'FnaAdmin' ,
+  iv_Timekey IN NUMBER DEFAULT 49999 ,
+  v_UploadID IN NUMBER
+)
+AS
+   v_Timekey NUMBER(10,0) := iv_Timekey;
+   v_cursor SYS_REFCURSOR;
+
+BEGIN
+
+   BEGIN
+
+      BEGIN
+         /*TODO:SQLDEV*/ SET DATEFORMAT DMY /*END:SQLDEV*/
+         SELECT MAX(Timekey)  
+
+           INTO v_Timekey
+           FROM SysDayMatrix 
+          WHERE  UTILS.CONVERT_TO_VARCHAR2(date_,200) = UTILS.CONVERT_TO_VARCHAR2(SYSDATE,200);
+         DBMS_OUTPUT.PUT_LINE(v_Timekey);
+         IF ( v_MenuID = '1458' ) THEN
+
+         BEGIN
+            OPEN  v_cursor FOR
+               SELECT ROW_NUMBER() OVER ( ORDER BY PoolID  ) SrNo  ,
+                      PoolID ,
+                      PoolName ,
+                      PoolType ,
+                      NoofAccounts ,
+                      BalanceOutstanding ,
+                      IBPCExposureAmt ,
+                      UTILS.CONVERT_TO_VARCHAR2(IBPCReckoningDate,20,p_style=>103) IBPCReckoningDate  ,
+                      UTILS.CONVERT_TO_VARCHAR2(IBPCMarkingDate,20,p_style=>103) IBPCMarkingDate  ,
+                      UTILS.CONVERT_TO_VARCHAR2(MaturityDate,20,p_style=>103) MaturityDate  ,
+                      TotalPosBalance ,
+                      TotalInttReceivable 
+                 FROM ( SELECT PoolID ,
+                               PoolName ,
+                               PoolType ,
+                               --,Count(1) NoofAccounts
+                               --,SUM(BalanceOutstanding)BalanceOutstanding
+                               --,SUM(IBPCExposureAmt)IBPCExposureAmt
+                               --,MAx(IBPCReckoningDate)IBPCReckoningDate
+                               --,MAx(IBPCMarkingDate)IBPCMarkingDate
+                               --,Max(MaturityDate)MaturityDate
+                               --,SUM(TotalPosBalance)TotalPosBalance
+                               --,SUM(TotalInttReceivable)TotalInttReceivable
+                               NoOfAccount NoofAccounts  ,
+                               BalanceOutstanding ,
+                               IBPCExposureAmt ,
+                               IBPCReckoningDate ,
+                               IBPCMarkingDate ,
+                               MaturityDate ,
+                               TotalPosBalance ,
+                               TotalInttReceivable 
+                        FROM IBPCPoolSummary_Mod 
+                         WHERE --Isnull(AuthorisationStatus,'A') in ('NP','MP') And
+                          EffectiveFromTimeKey <= v_TimeKey
+                            AND EffectiveToTimeKey >= v_TimeKey
+                            AND UploadID = v_UploadID ) A ;
+               DBMS_SQL.RETURN_RESULT(v_cursor);
+
+         END;
+         END IF;
+
+      END;
+   EXCEPTION
+      WHEN OTHERS THEN
+
+   BEGIN
+      INSERT INTO RBL_MISDB_PROD.Error_Log
+        ( SELECT utils.error_line ErrorLine  ,
+                 SQLERRM ErrorMessage  ,
+                 SQLCODE ErrorNumber  ,
+                 utils.error_procedure ErrorProcedure  ,
+                 utils.error_severity ErrorSeverity  ,
+                 utils.error_state ErrorState  ,
+                 SYSDATE 
+            FROM DUAL  );
+
+   END;END;
+
+EXCEPTION WHEN OTHERS THEN utils.handleerror(SQLCODE,SQLERRM);
+END;
+
+/
+
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "ROLE_LOCAL_RBL_MISDB_PROD_ORACLE";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "QPI_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "ALERT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "DWH_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "MAIN_PRO";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "BS_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "ACL_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "ROLE_LOCAL_RBL_MISDB_PROD_ORACLE";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "QPI_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "ALERT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "DWH_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "MAIN_PRO";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "BS_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "ACL_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "ROLE_ALL_DB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "CC_CDR_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "RBL_BI_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "BSG_READ_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "STD_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "ETL_TEMP_RBL_TEMPDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "RBL_TEMPDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "STG_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "ADF_CDR_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "ROLE_ALL_DB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "CC_CDR_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "RBL_BI_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "BSG_READ_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "STD_FIN_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "ETL_TEMP_RBL_TEMPDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "RBL_TEMPDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "STG_FIN_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."IBPCCHECKERVIEW" TO "ADF_CDR_RBL_STGDB";

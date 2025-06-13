@@ -1,0 +1,14 @@
+--------------------------------------------------------
+--  DDL for Table GTT_CALC
+--------------------------------------------------------
+
+  CREATE GLOBAL TEMPORARY TABLE "ETL_TEMP_RBL_TEMPDB"."GTT_CALC" 
+   (	"CUSTOMER_ID" VARCHAR2(20 CHAR), 
+	"COLLATERALID" VARCHAR2(30 CHAR), 
+	"SECURITYVALUE" NUMBER, 
+	"APPORTIONED_VALUE_CUST" NUMBER, 
+	"APPORTIONED_VALUE_SRN" NUMBER, 
+	"CALC_PER" NUMBER, 
+	"SECVALUE_FINAL" NUMBER(16,2), 
+	"SEC_PERF_FLG" VARCHAR2(50 CHAR)
+   ) ON COMMIT DELETE ROWS ;

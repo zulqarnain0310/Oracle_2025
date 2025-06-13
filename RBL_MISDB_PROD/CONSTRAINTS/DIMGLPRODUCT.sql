@@ -1,0 +1,7 @@
+--------------------------------------------------------
+--  Constraints for Table DIMGLPRODUCT
+--------------------------------------------------------
+
+  ALTER TABLE "RBL_MISDB_PROD"."DIMGLPRODUCT" MODIFY ("GLPRODUCT_KEY" NOT NULL ENABLE);
+  ALTER TABLE "RBL_MISDB_PROD"."DIMGLPRODUCT" MODIFY ("GLPRODUCTALT_KEY" NOT NULL ENABLE);
+  ALTER TABLE "RBL_MISDB_PROD"."DIMGLPRODUCT" MODIFY ("D2KTIMESTAMP" NOT NULL ENABLE);

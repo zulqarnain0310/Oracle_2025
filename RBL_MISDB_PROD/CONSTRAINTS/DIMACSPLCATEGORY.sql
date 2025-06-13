@@ -1,0 +1,7 @@
+--------------------------------------------------------
+--  Constraints for Table DIMACSPLCATEGORY
+--------------------------------------------------------
+
+  ALTER TABLE "RBL_MISDB_PROD"."DIMACSPLCATEGORY" MODIFY ("SPLCAT_KEY" NOT NULL ENABLE);
+  ALTER TABLE "RBL_MISDB_PROD"."DIMACSPLCATEGORY" MODIFY ("SPLCATALT_KEY" NOT NULL ENABLE);
+  ALTER TABLE "RBL_MISDB_PROD"."DIMACSPLCATEGORY" MODIFY ("D2KTIMESTAMP" NOT NULL ENABLE);

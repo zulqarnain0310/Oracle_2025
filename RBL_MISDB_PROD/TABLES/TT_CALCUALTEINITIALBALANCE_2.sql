@@ -1,0 +1,10 @@
+--------------------------------------------------------
+--  DDL for Table TT_CALCUALTEINITIALBALANCE_2
+--------------------------------------------------------
+
+  CREATE GLOBAL TEMPORARY TABLE "RBL_MISDB_PROD"."TT_CALCUALTEINITIALBALANCE_2" 
+   (	"CUSTOMERACID" VARCHAR2(20 CHAR), 
+	"STATUSDATE" VARCHAR2(200 CHAR), 
+	"TIMEKEY" NUMBER, 
+	"ATTHETIMEOFWRITEOFF_TIMEKEY" VARCHAR2(20 CHAR)
+   ) ON COMMIT DELETE ROWS ;

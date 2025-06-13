@@ -1,0 +1,12 @@
+--------------------------------------------------------
+--  DDL for Table TT_TEMPTABLE_PERCOLATION_5
+--------------------------------------------------------
+
+  CREATE GLOBAL TEMPORARY TABLE "MAIN_PRO"."TT_TEMPTABLE_PERCOLATION_5" 
+   (	"REFCUSTOMERID" VARCHAR2(50 CHAR), 
+	"CUSTOMERACID" VARCHAR2(30 CHAR), 
+	"NPA_REASON" CLOB
+   ) ON COMMIT DELETE ROWS 
+ LOB ("NPA_REASON") STORE AS BASICFILE (
+  ENABLE STORAGE IN ROW CHUNK 8192 RETENTION 
+  NOCACHE ) ;

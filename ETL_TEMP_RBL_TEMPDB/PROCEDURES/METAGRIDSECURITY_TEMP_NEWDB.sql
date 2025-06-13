@@ -1,0 +1,143 @@
+--------------------------------------------------------
+--  DDL for Procedure METAGRIDSECURITY_TEMP_NEWDB
+--------------------------------------------------------
+set define off;
+
+  CREATE OR REPLACE EDITIONABLE PROCEDURE "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" 
+-- =============================================
+ -- Author:		<Author,,Name>
+ -- Create date: <Create Date,,>
+ -- Description:	<Description,,>
+ -- =============================================
+
+AS
+   -- SET NOCOUNT ON added to prevent extra result sets from
+   -- interfering with SELECT statements.
+   -- Insert statements for procedure here
+   v_vEffectivefrom NUMBER(10,0);
+   v_TimeKey NUMBER(10,0);
+   v_DATE VARCHAR2(200) := ( SELECT Date_ 
+     FROM RBL_MISDB_010922_UAT.Automate_Advances 
+    WHERE  EXT_FLG = 'Y' );
+   --GO
+   /*********************************************************************************************************/
+   /*  New Customers Customer Entity ID Update  */
+   v_MetagridEntityId NUMBER(10,0) := 0;
+-- Add the parameters for the stored procedure here
+
+BEGIN
+
+   SELECT TimeKey 
+
+     INTO v_vEffectiveFrom
+     FROM RBL_MISDB_010922_UAT.Automate_Advances 
+    WHERE  EXT_FLG = 'Y';
+   SELECT TimeKey 
+
+     INTO v_TimeKey
+     FROM RBL_MISDB_010922_UAT.Automate_Advances 
+    WHERE  EXT_FLG = 'Y';
+   EXECUTE IMMEDIATE ' TRUNCATE TABLE TempmetagridSecurity ';
+   INSERT INTO TempmetagridSecurity
+     ( Date_of_Data, Source_System_Name, Customer_ID, Account_ID, Security_ID, Collateral_Type, Security_Code, Charge_Type_Code, Security_Value, Valuation_Source, Valuation_date, Valuation_expiry_date, AuthorisationStatus, EffectiveFromTimeKey, EffectiveToTimeKey, CreatedBy, DateCreated, ModifiedBy, DateModified, ApprovedBy, DateApproved )
+     ( SELECT Date_of_Data ,
+              Source_System_Name ,
+              Customer_ID ,
+              Account_ID ,
+              Security_ID ,
+              Collateral_Type ,
+              Security_Code ,
+              Charge_Type_Code ,
+              Security_Value ,
+              Valuation_Source ,
+              Valuation_date ,
+              Valuation_expiry_date ,
+              NULL AuthorisationStatus  ,
+              v_vEffectivefrom EffectiveFromTimeKey  ,
+              49999 EffectiveToTimeKey  ,
+              'SSISUSER' CreatedBy  ,
+              SYSDATE DateCreated  ,
+              NULL ModifiedBy  ,
+              NULL DateModified  ,
+              NULL ApprovedBy  ,
+              NULL DateApproved  
+       FROM RBL_STGDB.metagrid_Security_STG A );
+   /*********************************************************************************************************/
+   /*  Existing Customers Customer Entity ID Update  */
+   MERGE INTO TEMP 
+   USING (SELECT TEMP.ROWID row_id, MAIN.MetagridEntityId
+   FROM TEMP ,RBL_TEMPDB.TempmetagridSecurity TEMP
+          JOIN RBL_MISDB_010922_UAT.metagridSecurity MAIN   ON TEMP.Account_ID = MAIN.Account_ID 
+    WHERE MAIN.EffectiveToTimeKey = 49999) src
+   ON ( TEMP.ROWID = src.row_id )
+   WHEN MATCHED THEN UPDATE SET TEMP.MetagridEntityId = src.MetagridEntityId;
+   SELECT MAX(MetagridEntityId)  
+
+     INTO v_MetagridEntityId
+     FROM RBL_MISDB_010922_UAT.metagridSecurity ;
+   IF v_MetagridEntityId IS NULL THEN
+
+   BEGIN
+      v_MetagridEntityId := 0 ;
+
+   END;
+   END IF;
+   MERGE INTO TEMP 
+   USING (SELECT TEMP.ROWID row_id, ACCT.MetagridEntityId
+   FROM TEMP ,RBL_TEMPDB.TempmetagridSecurity TEMP
+          JOIN ( SELECT "TEMPMETAGRIDSECURITY".Account_ID ,
+                        (v_MetagridEntityId + ROW_NUMBER() OVER ( ORDER BY ( SELECT 1 
+                                                                               FROM DUAL  )  )) MetagridEntityId  
+                 FROM RBL_TEMPDB.TempmetagridSecurity 
+                  WHERE  "TEMPMETAGRIDSECURITY".MetagridEntityId = 0
+                           OR "TEMPMETAGRIDSECURITY".MetagridEntityId IS NULL ) ACCT   ON TEMP.Account_ID = ACCT.Account_ID ) src
+   ON ( TEMP.ROWID = src.row_id )
+   WHEN MATCHED THEN UPDATE SET TEMP.MetagridEntityId = src.MetagridEntityId;--------------------------------------------------
+
+EXCEPTION WHEN OTHERS THEN utils.handleerror(SQLCODE,SQLERRM);
+END;
+
+/
+
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "ROLE_ALL_DB";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "CC_CDR_RBL_STGDB";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "MAIN_PRO";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "RBL_BI_RBL_STGDB";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "ALERT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "ACL_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "QPI_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "RBL_MISDB_PROD";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "BSG_READ_RBL_STGDB";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "STD_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "BS_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "RBL_STGDB";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "DWH_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "RBL_TEMPDB";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "STG_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "ADF_CDR_RBL_STGDB";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "ROLE_ALL_DB";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "CC_CDR_RBL_STGDB";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "MAIN_PRO";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "RBL_BI_RBL_STGDB";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "ALERT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "ACL_RBL_MISDB_PROD";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "QPI_RBL_MISDB_PROD";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "RBL_MISDB_PROD";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "BSG_READ_RBL_STGDB";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "STD_FIN_RBL_STGDB";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "BS_RBL_MISDB_PROD";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "RBL_STGDB";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "DWH_RBL_MISDB_PROD";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "RBL_TEMPDB";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "STG_FIN_RBL_STGDB";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."METAGRIDSECURITY_TEMP_NEWDB" TO "ADF_CDR_RBL_STGDB";

@@ -1,0 +1,13 @@
+--------------------------------------------------------
+--  DDL for Table SS2K5_CHECK_CONSTRAINTS
+--------------------------------------------------------
+
+  CREATE GLOBAL TEMPORARY TABLE "RBL_TEMPDB"."SS2K5_CHECK_CONSTRAINTS" 
+   (	"DB_ID" NUMBER(10,0), 
+	"OBJECT_ID" NUMBER(10,0), 
+	"PARENT_COLUMN_ID" NUMBER(10,0), 
+	"DEFINITION" CLOB
+   ) ON COMMIT PRESERVE ROWS 
+ LOB ("DEFINITION") STORE AS BASICFILE (
+  ENABLE STORAGE IN ROW CHUNK 8192 RETENTION 
+  NOCACHE ) ;

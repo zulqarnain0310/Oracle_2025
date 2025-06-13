@@ -1,0 +1,7 @@
+--------------------------------------------------------
+--  Constraints for Table DIMSCHEMEMAPPING
+--------------------------------------------------------
+
+  ALTER TABLE "RBL_MISDB_PROD"."DIMSCHEMEMAPPING" MODIFY ("SCHEMEALT_KEY" NOT NULL ENABLE);
+  ALTER TABLE "RBL_MISDB_PROD"."DIMSCHEMEMAPPING" MODIFY ("D2KTIMESTAMP" NOT NULL ENABLE);
+  ALTER TABLE "RBL_MISDB_PROD"."DIMSCHEMEMAPPING" MODIFY ("SCHEME_KEY" NOT NULL ENABLE);

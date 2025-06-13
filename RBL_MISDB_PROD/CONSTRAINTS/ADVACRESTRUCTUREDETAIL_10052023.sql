@@ -1,0 +1,6 @@
+--------------------------------------------------------
+--  Constraints for Table ADVACRESTRUCTUREDETAIL_10052023
+--------------------------------------------------------
+
+  ALTER TABLE "RBL_MISDB_PROD"."ADVACRESTRUCTUREDETAIL_10052023" MODIFY ("ENTITYKEY" NOT NULL ENABLE);
+  ALTER TABLE "RBL_MISDB_PROD"."ADVACRESTRUCTUREDETAIL_10052023" MODIFY ("D2KTIMESTAMP" NOT NULL ENABLE);

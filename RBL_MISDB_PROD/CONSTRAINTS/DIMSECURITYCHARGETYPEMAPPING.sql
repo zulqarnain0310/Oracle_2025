@@ -1,0 +1,6 @@
+--------------------------------------------------------
+--  Constraints for Table DIMSECURITYCHARGETYPEMAPPING
+--------------------------------------------------------
+
+  ALTER TABLE "RBL_MISDB_PROD"."DIMSECURITYCHARGETYPEMAPPING" MODIFY ("ENTITYKEY" NOT NULL ENABLE);
+  ALTER TABLE "RBL_MISDB_PROD"."DIMSECURITYCHARGETYPEMAPPING" MODIFY ("D2KTIMESTAMP" NOT NULL ENABLE);

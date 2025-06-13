@@ -1,0 +1,151 @@
+--------------------------------------------------------
+--  DDL for Procedure DIMGLPRODUCT_INSERT
+--------------------------------------------------------
+set define off;
+
+  CREATE OR REPLACE EDITIONABLE PROCEDURE "MAIN_PRO"."DIMGLPRODUCT_INSERT" /*==============================================
+ AUTHER : TRILOKI SHANKER KHANNA
+ CREATE DATE : 15-01-2020
+ MODIFY DATE : 15-01-2020
+ DESCRIPTION : INSERT DATA FOR DimGLProduct
+ --EXEC PRO.DimGLProduct_INSERT
+ ================================================*/
+--BEGIN
+ --/*-------INSERT DATA FOR Profile---------------------------------*/
+ --IF OBJECT_ID('TEMPDB..#NEWDimGLProduct') IS NOT NULL
+ --   DROP TABLE #NEWDimGLProduct
+ --DECLARE  @vEffectivefrom  Int SET @vEffectiveFrom=(SELECT TimeKey FROM [dbo].Automate_Advances WHERE EXT_FLG='Y')
+ --DECLARE @TimeKey  Int SET @TimeKey=(SELECT TimeKey FROM [dbo].Automate_Advances WHERE EXT_FLG='Y')
+ --DECLARE @DATE AS DATE =(SELECT Date FROM [dbo].Automate_Advances WHERE EXT_FLG='Y')
+ --DECLARE @GLProductAlt_Key INT=0 
+ --SELECT @GLProductAlt_Key=MAX(GLProductAlt_Key) FROM  [dbo].[DimGLProduct] 
+ --DECLARE @GLProduct_Key INT=0 
+ --SELECT @GLProduct_Key=MAX(GLProduct_Key) FROM  [dbo].[DimGLProduct] 
+ --SELECT	   @GLProduct_Key + ROW_NUMBER()OVER(ORDER BY (SELECT 1)) AS  GLProduct_Key
+ --	      ,@GLProductAlt_Key + ROW_NUMBER()OVER(ORDER BY (SELECT 1)) AS GLProductAlt_Key
+ --           ,DIMGL.GLCode
+ --           ,DIMGL.GLName
+ --           ,DIMPRODUCT.ProductCode
+ --           ,DIMPRODUCT.ProductName
+ --           ,NULL [GLType]
+ --           ,NULL [GLSta]
+ --           ,DIMGL.GLGroup
+ --           ,NULL [FacilityType]
+ --           ,NULL [FacilitySubType]
+ --           ,NULL [ExpType]
+ --           ,NULL [Bsr1aCode]
+ --           ,NULL [RetailGL]
+ --           ,NULL [AssetClassGrp]
+ --           ,NULL [AssetClass]
+ --           ,@vEffectivefrom AS [EffectiveFromTimeKey]
+ --           ,49999 [EffectiveToTimeKey]
+ --           ,'SSISUSER'[CreatedBy]
+ --           ,GETDATE() [DateCreated]
+ --		   INTO #NEWDimGLProduct
+ --FROM (SELECT DISTINCT DIMGL.GLAlt_Key,GLCODE,DIMPRODUCT.ProductAlt_Key,PRODUCTCODE,GLProductAlt_Key FROM ADVACBASICDETAIL
+ --INNER JOIN DIMGL ON DIMGL.GLAlt_Key=ADVACBASICDETAIL.GLAlt_Key
+ --INNER JOIN DIMPRODUCT ON DIMPRODUCT.ProductAlt_Key=ADVACBASICDETAIL.ProductAlt_Key
+ --WHERE GLProductAlt_Key IS NULL)ADVACBASICDETAIL
+ --INNER JOIN DIMGL ON DIMGL.GLAlt_Key=ADVACBASICDETAIL.GLAlt_Key
+ --INNER JOIN DIMPRODUCT ON DIMPRODUCT.ProductAlt_Key=ADVACBASICDETAIL.ProductAlt_Key
+ --WHERE GLProductAlt_Key IS NULL
+ --INSERT INTO [dbo].[DimGLProduct]
+ --           ([GLProduct_Key]
+ --	       ,[GLProductAlt_Key]
+ --           ,[GLCode]
+ --           ,[GLName]
+ --           ,[ProductCode]
+ --           ,[ProductName]
+ --           ,[GLType]
+ --           ,[GLSta]
+ --           ,[GLGroup]
+ --           ,[FacilityType]
+ --           ,[FacilitySubType]
+ --           ,[ExpType]
+ --           ,[Bsr1aCode]
+ --           ,[RetailGL]
+ --           ,[AssetClassGrp]
+ --           ,[AssetClass]
+ --           ,[EffectiveFromTimeKey]
+ --           ,[EffectiveToTimeKey]
+ --           ,[CreatedBy]
+ --           ,[DateCreated])
+ --		   SELECT 
+ --		    [GLProduct_Key]
+ --	       ,[GLProductAlt_Key]
+ --           ,[GLCode]
+ --           ,[GLName]
+ --           ,[ProductCode]
+ --           ,[ProductName]
+ --           ,[GLType]
+ --           ,[GLSta]
+ --           ,[GLGroup]
+ --           ,[FacilityType]
+ --           ,[FacilitySubType]
+ --           ,[ExpType]
+ --           ,[Bsr1aCode]
+ --           ,[RetailGL]
+ --           ,[AssetClassGrp]
+ --           ,[AssetClass]
+ --           ,[EffectiveFromTimeKey]
+ --           ,[EffectiveToTimeKey]
+ --           ,[CreatedBy]
+ --           ,[DateCreated]
+ --		   FROM  #NEWDimGLProduct
+ --		   END 
+
+AS
+
+BEGIN
+
+   NULL;
+
+EXCEPTION WHEN OTHERS THEN utils.handleerror(SQLCODE,SQLERRM);
+END;
+
+/
+
+  GRANT EXECUTE ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "ROLE_LOCAL_RBL_MISDB_PROD_ORACLE";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "QPI_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "ALERT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "DWH_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "BS_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "ACL_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "RBL_MISDB_PROD";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT DEBUG ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "ROLE_LOCAL_RBL_MISDB_PROD_ORACLE";
+  GRANT DEBUG ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT DEBUG ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "QPI_RBL_MISDB_PROD";
+  GRANT DEBUG ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "ALERT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "DWH_RBL_MISDB_PROD";
+  GRANT DEBUG ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT DEBUG ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "BS_RBL_MISDB_PROD";
+  GRANT DEBUG ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "ACL_RBL_MISDB_PROD";
+  GRANT DEBUG ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT DEBUG ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "RBL_MISDB_PROD";
+  GRANT DEBUG ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "ROLE_ALL_DB";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "CC_CDR_RBL_STGDB";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "RBL_BI_RBL_STGDB";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "BSG_READ_RBL_STGDB";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "STD_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "RBL_STGDB";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "ETL_TEMP_RBL_TEMPDB";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "RBL_TEMPDB";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "STG_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "ADF_CDR_RBL_STGDB";
+  GRANT DEBUG ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "ROLE_ALL_DB";
+  GRANT DEBUG ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "CC_CDR_RBL_STGDB";
+  GRANT DEBUG ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "RBL_BI_RBL_STGDB";
+  GRANT DEBUG ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "BSG_READ_RBL_STGDB";
+  GRANT DEBUG ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "STD_FIN_RBL_STGDB";
+  GRANT DEBUG ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "RBL_STGDB";
+  GRANT DEBUG ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "ETL_TEMP_RBL_TEMPDB";
+  GRANT DEBUG ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "RBL_TEMPDB";
+  GRANT DEBUG ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "STG_FIN_RBL_STGDB";
+  GRANT DEBUG ON "MAIN_PRO"."DIMGLPRODUCT_INSERT" TO "ADF_CDR_RBL_STGDB";

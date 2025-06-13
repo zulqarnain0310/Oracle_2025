@@ -1,0 +1,6 @@
+--------------------------------------------------------
+--  Constraints for Table DIMCOLLATERALSECURITYMAPPING
+--------------------------------------------------------
+
+  ALTER TABLE "RBL_MISDB_PROD"."DIMCOLLATERALSECURITYMAPPING" MODIFY ("ENTITYKEY" NOT NULL ENABLE);
+  ALTER TABLE "RBL_MISDB_PROD"."DIMCOLLATERALSECURITYMAPPING" MODIFY ("D2KTIMESTAMP" NOT NULL ENABLE);

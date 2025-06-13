@@ -1,0 +1,12 @@
+--------------------------------------------------------
+--  DDL for Table TT_OAOLMASTERUPLOADDATA_6
+--------------------------------------------------------
+
+  CREATE GLOBAL TEMPORARY TABLE "RBL_MISDB_PROD"."TT_OAOLMASTERUPLOADDATA_6" 
+   (	"SR_NO" NUMBER(5,0), 
+	"COLUMNNAME" VARCHAR2(50 BYTE), 
+	"ERRORDATA" VARCHAR2(100 BYTE), 
+	"ERRORTYPE" VARCHAR2(100 BYTE), 
+	"USERID" VARCHAR2(100 BYTE), 
+	"ENTITYID" NUMBER(10,0)
+   ) ON COMMIT DELETE ROWS ;

@@ -1,0 +1,7 @@
+--------------------------------------------------------
+--  Constraints for Table DIMPRODUCT_251122
+--------------------------------------------------------
+
+  ALTER TABLE "RBL_MISDB_PROD"."DIMPRODUCT_251122" MODIFY ("PRODUCTALT_KEY" NOT NULL ENABLE);
+  ALTER TABLE "RBL_MISDB_PROD"."DIMPRODUCT_251122" MODIFY ("D2KTIMESTAMP" NOT NULL ENABLE);
+  ALTER TABLE "RBL_MISDB_PROD"."DIMPRODUCT_251122" MODIFY ("PRODUCT_KEY" NOT NULL ENABLE);

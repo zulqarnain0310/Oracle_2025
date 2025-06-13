@@ -1,0 +1,6 @@
+--------------------------------------------------------
+--  Constraints for Table ADVSECURITYINSURANCEDETAIL
+--------------------------------------------------------
+
+  ALTER TABLE "PREMOC_RBL_MISDB_PROD"."ADVSECURITYINSURANCEDETAIL" MODIFY ("ENTITYKEY" NOT NULL ENABLE);
+  ALTER TABLE "PREMOC_RBL_MISDB_PROD"."ADVSECURITYINSURANCEDETAIL" MODIFY ("D2KTIMESTAMP" NOT NULL ENABLE);

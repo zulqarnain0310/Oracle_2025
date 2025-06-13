@@ -1,0 +1,7 @@
+--------------------------------------------------------
+--  Constraints for Table DIMOCCUPATION
+--------------------------------------------------------
+
+  ALTER TABLE "RBL_MISDB_PROD"."DIMOCCUPATION" MODIFY ("OCCUPATION_KEY" NOT NULL ENABLE);
+  ALTER TABLE "RBL_MISDB_PROD"."DIMOCCUPATION" MODIFY ("OCCUPATIONALT_KEY" NOT NULL ENABLE);
+  ALTER TABLE "RBL_MISDB_PROD"."DIMOCCUPATION" MODIFY ("D2KTIMESTAMP" NOT NULL ENABLE);

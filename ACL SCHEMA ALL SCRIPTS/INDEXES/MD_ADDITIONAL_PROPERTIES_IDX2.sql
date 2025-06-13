@@ -1,0 +1,7 @@
+--------------------------------------------------------
+--  DDL for Index MD_ADDITIONAL_PROPERTIES_IDX2
+--------------------------------------------------------
+
+  CREATE INDEX "ACL_RBL_MISDB_PROD"."MD_ADDITIONAL_PROPERTIES_IDX2" ON "ACL_RBL_MISDB_PROD"."MD_ADDITIONAL_PROPERTIES" ("REF_ID_FK") 
+  PCTFREE 10 INITRANS 2 MAXTRANS 255 COMPUTE STATISTICS 
+  TABLESPACE "USERS" ;

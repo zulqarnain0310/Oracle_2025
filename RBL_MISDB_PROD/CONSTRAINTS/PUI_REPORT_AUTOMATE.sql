@@ -1,0 +1,7 @@
+--------------------------------------------------------
+--  Constraints for Table PUI_REPORT_AUTOMATE
+--------------------------------------------------------
+
+  ALTER TABLE "RBL_MISDB_PROD"."PUI_REPORT_AUTOMATE" MODIFY ("CUSTOMERID" NOT NULL ENABLE);
+  ALTER TABLE "RBL_MISDB_PROD"."PUI_REPORT_AUTOMATE" MODIFY ("CUSTOMERNAME" NOT NULL ENABLE);
+  ALTER TABLE "RBL_MISDB_PROD"."PUI_REPORT_AUTOMATE" MODIFY ("RESTRUCTURING" NOT NULL ENABLE);

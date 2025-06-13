@@ -1,0 +1,7 @@
+--------------------------------------------------------
+--  Constraints for Table GTT_DIMREGION
+--------------------------------------------------------
+
+  ALTER TABLE "ALERT_RBL_MISDB_PROD"."GTT_DIMREGION" MODIFY ("ZONEALT_KEY" NOT NULL ENABLE);
+  ALTER TABLE "ALERT_RBL_MISDB_PROD"."GTT_DIMREGION" MODIFY ("REGIONNAME" NOT NULL ENABLE);
+  ALTER TABLE "ALERT_RBL_MISDB_PROD"."GTT_DIMREGION" MODIFY ("REGIONALT_KEY" NOT NULL ENABLE);

@@ -1,0 +1,20 @@
+--------------------------------------------------------
+--  DDL for Table TT_TEMP1_77
+--------------------------------------------------------
+
+  CREATE GLOBAL TEMPORARY TABLE "RBL_MISDB_PROD"."TT_TEMP1_77" 
+   (	"NONUSE" NUMBER(10,0), 
+	"PWDCHNG" NUMBER(10,0), 
+	"PWDLEN" NUMBER(10,0), 
+	"PWDNUM" NUMBER(10,0), 
+	"PWDREUSE" NUMBER(10,0), 
+	"UNLOGON" NUMBER(10,0), 
+	"USERIDALP" NUMBER(10,0), 
+	"USERIDLEN" NUMBER(10,0), 
+	"USERIDLENMAX" NUMBER(10,0), 
+	"PWDLENMAX" NUMBER(10,0), 
+	"PWDALPHAMIN" NUMBER(10,0), 
+	"USERSHOMAX" NUMBER(10,0), 
+	"USERSROMAX" NUMBER(10,0), 
+	"USERSBOMAX" NUMBER(10,0)
+   ) ON COMMIT DELETE ROWS ;

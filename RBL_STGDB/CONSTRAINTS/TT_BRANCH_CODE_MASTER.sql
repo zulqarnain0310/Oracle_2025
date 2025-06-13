@@ -1,0 +1,7 @@
+--------------------------------------------------------
+--  Constraints for Table TT_BRANCH_CODE_MASTER
+--------------------------------------------------------
+
+  ALTER TABLE "RBL_STGDB"."TT_BRANCH_CODE_MASTER" MODIFY ("BRANCHALT_KEY" NOT NULL ENABLE);
+  ALTER TABLE "RBL_STGDB"."TT_BRANCH_CODE_MASTER" MODIFY ("BRANCH_KEY" NOT NULL ENABLE);
+  ALTER TABLE "RBL_STGDB"."TT_BRANCH_CODE_MASTER" MODIFY ("D2KTIMESTAMP" NOT NULL ENABLE);

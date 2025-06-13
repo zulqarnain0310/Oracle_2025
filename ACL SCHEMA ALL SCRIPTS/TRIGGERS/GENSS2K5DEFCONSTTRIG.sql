@@ -1,0 +1,11 @@
+--------------------------------------------------------
+--  DDL for Trigger GENSS2K5DEFCONSTTRIG
+--------------------------------------------------------
+
+  CREATE OR REPLACE EDITIONABLE TRIGGER "ACL_RBL_MISDB_PROD"."GENSS2K5DEFCONSTTRIG" BEFORE
+  INSERT ON STAGE_SS2K5_DT_CONSTRAINTS FOR EACH ROW BEGIN IF :new.OBJID_GEN IS NULL THEN :new.OBJID_GEN := MD_META.get_next_id;
+END IF;
+END Genss2k5DefConstTrig;
+
+/
+ALTER TRIGGER "ACL_RBL_MISDB_PROD"."GENSS2K5DEFCONSTTRIG" ENABLE;

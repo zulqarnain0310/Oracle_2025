@@ -1,0 +1,18 @@
+--------------------------------------------------------
+--  DDL for Table STAGE_SYB12_SYSINDEXES
+--------------------------------------------------------
+
+  CREATE GLOBAL TEMPORARY TABLE "RBL_TEMPDB"."STAGE_SYB12_SYSINDEXES" 
+   (	"SVRID_FK" NUMBER, 
+	"DBID_GEN_FK" NUMBER, 
+	"ID_GEN_FK" NUMBER, 
+	"INDID_GEN" NUMBER, 
+	"TABLE_ID" NUMBER, 
+	"INDEX_NAME" VARCHAR2(256 BYTE), 
+	"INDEX_DESC" VARCHAR2(1000 BYTE), 
+	"INDEX_KEYS" VARCHAR2(1000 BYTE), 
+	"KEYCNT" NUMBER(7,0), 
+	"INDID" NUMBER(7,0), 
+	"STATUS" NUMBER(7,0), 
+	"STATUS2" NUMBER(7,0)
+   ) ON COMMIT PRESERVE ROWS ;

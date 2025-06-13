@@ -1,0 +1,152 @@
+--------------------------------------------------------
+--  DDL for Procedure INVESTMENTISSUERDETAIL_TEMP
+--------------------------------------------------------
+set define off;
+
+  CREATE OR REPLACE EDITIONABLE PROCEDURE "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" 
+-- =============================================
+ -- Author:		<Author,,Name>
+ -- Create date: <Create Date,,>
+ -- Description:	<Description,,>
+ -- =============================================
+
+AS
+   -- SET NOCOUNT ON added to prevent extra result sets from
+   -- interfering with SELECT statements.
+   -- Insert statements for procedure here
+   v_vEffectivefrom NUMBER(10,0);
+   v_TimeKey NUMBER(10,0);
+   v_DATE VARCHAR2(200);
+   --GO
+   /*********************************************************************************************************/
+   /*  New Customers Customer Entity ID Update  */
+   v_IssuerEntityId NUMBER(10,0) := 0;
+-- Add the parameters for the stored procedure here
+
+BEGIN
+
+   SELECT Date_ INTO v_DATE 
+     FROM RBL_MISDB_PROD.Automate_Advances 
+    WHERE  EXT_FLG = 'Y' ;
+
+   SELECT TimeKey 
+
+     INTO v_vEffectiveFrom
+     FROM RBL_MISDB_PROD.Automate_Advances 
+    WHERE  EXT_FLG = 'Y';
+   SELECT TimeKey 
+
+     INTO v_TimeKey
+     FROM RBL_MISDB_PROD.Automate_Advances 
+    WHERE  EXT_FLG = 'Y';
+   EXECUTE IMMEDIATE ' TRUNCATE TABLE RBL_TEMPDB.TempInvestmentIssuerDetail ';
+   INSERT INTO RBL_TEMPDB.TempInvestmentIssuerDetail
+     ( BranchCode, Issuer_Key, IssuerAltkey, IssuerID, IssuerName, RatingStatus, IssuerAccpRating, IssuerAccpRatingDt, IssuerRatingAgency, Ref_Txn_Sys_Cust_ID, Issuer_Category_Code, GrpEntityOfBank, AuthorisationStatus, EffectiveFromTimeKey, EffectiveToTimeKey, CreatedBy, DateCreated, ModifiedBy, DateModified, ApprovedBy, DateApproved, SourceAlt_key, UcifId )
+     ( 
+       --,PanNo
+       SELECT A.BranchCode ,
+              NULL Issuer_Key  ,
+              NULL IssuerAltkey  ,
+              A.IssuerID ,
+              A.IssuerName ,
+              NULL RatingStatus  ,
+              NULL IssuerAccpRating  ,
+              NULL IssuerAccpRatingDt  ,
+              NULL IssuerRatingAgency  ,
+              A.Ref_Txn_Sys_Cust_ID ,
+              A.Issuer_Category_Code ,
+              A.GrpEntityOfBank ,
+              NULL AuthorisationStatus  ,
+              v_vEffectivefrom EffectiveFromTimeKey  ,
+              49999 EffectiveToTimeKey  ,
+              'SSISUSER' CreatedBy  ,
+              SYSDATE DateCreated  ,
+              NULL ModifiedBy  ,
+              NULL DateModified  ,
+              NULL ApprovedBy  ,
+              NULL DateApproved  ,
+              NULL SourceAlt_key  ,
+              UCIC_ID UcifId  
+
+       ---,PAN PanNo
+       FROM RBL_STGDB.INVISSUER_SOURCESYSTEM_STG A );
+   /*********************************************************************************************************/
+   /*  Existing Customers Customer Entity ID Update  */
+   MERGE INTO RBL_TEMPDB.TempInvestmentIssuerDetail TEMP
+   USING (SELECT TEMP.ROWID row_id, MAIN.IssuerEntityId
+   FROM RBL_TEMPDB.TempInvestmentIssuerDetail TEMP
+          JOIN RBL_MISDB_PROD.InvestmentIssuerDetail MAIN   ON TEMP.IssuerID = MAIN.IssuerID 
+    WHERE MAIN.EffectiveToTimeKey = 49999) src
+   ON ( TEMP.ROWID = src.row_id )
+   WHEN MATCHED THEN UPDATE SET TEMP.IssuerEntityId = src.IssuerEntityId;
+   SELECT MAX(IssuerEntityId)  
+
+     INTO v_IssuerEntityId
+     FROM RBL_MISDB_PROD.InvestmentIssuerDetail ;
+   IF v_IssuerEntityId IS NULL THEN
+
+   BEGIN
+      v_IssuerEntityId := 0 ;
+
+   END;
+   END IF;
+   MERGE INTO RBL_TEMPDB.TempInvestmentIssuerDetail TEMP
+   USING (SELECT TEMP.ROWID row_id, ACCT.IssuerEntityId
+   FROM RBL_TEMPDB.TempInvestmentIssuerDetail TEMP
+          JOIN ( SELECT A.IssuerID ,
+                        (v_IssuerEntityId + ROW_NUMBER() OVER ( ORDER BY ( SELECT 1 
+                                                                             FROM DUAL  )  )) IssuerEntityId  
+                 FROM RBL_TEMPDB.TempInvestmentIssuerDetail A
+                  WHERE  A.IssuerEntityId = 0
+                           OR A.IssuerEntityId IS NULL ) ACCT   ON TEMP.IssuerID = ACCT.IssuerID ) src
+   ON ( TEMP.ROWID = src.row_id )
+   WHEN MATCHED THEN UPDATE SET TEMP.IssuerEntityId = src.IssuerEntityId;--------------------------------------------------
+
+EXCEPTION WHEN NO_DATA_FOUND THEN DBMS_OUTPUT.PUT_LINE('NO DATA FOUND');
+            WHEN OTHERS THEN utils.handleerror(SQLCODE,SQLERRM);
+END;
+
+/
+
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "ROLE_ALL_DB";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "CC_CDR_RBL_STGDB";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "MAIN_PRO";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "RBL_BI_RBL_STGDB";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "ALERT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "ACL_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "QPI_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "RBL_MISDB_PROD";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "BSG_READ_RBL_STGDB";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "STD_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "BS_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "RBL_STGDB";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "DWH_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "RBL_TEMPDB";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "STG_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "ADF_CDR_RBL_STGDB";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "ROLE_ALL_DB";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "CC_CDR_RBL_STGDB";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "MAIN_PRO";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "RBL_BI_RBL_STGDB";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "ALERT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "ACL_RBL_MISDB_PROD";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "QPI_RBL_MISDB_PROD";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "RBL_MISDB_PROD";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "BSG_READ_RBL_STGDB";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "STD_FIN_RBL_STGDB";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "BS_RBL_MISDB_PROD";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "RBL_STGDB";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "DWH_RBL_MISDB_PROD";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "RBL_TEMPDB";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "STG_FIN_RBL_STGDB";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT DEBUG ON "ETL_TEMP_RBL_TEMPDB"."INVESTMENTISSUERDETAIL_TEMP" TO "ADF_CDR_RBL_STGDB";

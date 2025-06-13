@@ -1,0 +1,11 @@
+--------------------------------------------------------
+--  DDL for Table PRODUCT_CODE_MASTER
+--------------------------------------------------------
+
+  CREATE TABLE "DWH_STG"."PRODUCT_CODE_MASTER" 
+   (	"PRODUCT_CODE" VARCHAR2(20 BYTE), 
+	"SCHEME_DESCRIPTION" VARCHAR2(100 BYTE)
+   ) SEGMENT CREATION DEFERRED 
+  PCTFREE 10 PCTUSED 40 INITRANS 1 MAXTRANS 255 
+ NOCOMPRESS LOGGING
+  TABLESPACE "USERS" ;

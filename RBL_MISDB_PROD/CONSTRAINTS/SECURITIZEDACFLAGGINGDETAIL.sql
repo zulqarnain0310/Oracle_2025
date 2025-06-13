@@ -1,0 +1,6 @@
+--------------------------------------------------------
+--  Constraints for Table SECURITIZEDACFLAGGINGDETAIL
+--------------------------------------------------------
+
+  ALTER TABLE "RBL_MISDB_PROD"."SECURITIZEDACFLAGGINGDETAIL" MODIFY ("ENTITY_KEY" NOT NULL ENABLE);
+  ALTER TABLE "RBL_MISDB_PROD"."SECURITIZEDACFLAGGINGDETAIL" MODIFY ("D2KTIMESTAMP" NOT NULL ENABLE);

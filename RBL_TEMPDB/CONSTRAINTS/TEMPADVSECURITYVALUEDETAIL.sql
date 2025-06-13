@@ -1,0 +1,6 @@
+--------------------------------------------------------
+--  Constraints for Table TEMPADVSECURITYVALUEDETAIL
+--------------------------------------------------------
+
+  ALTER TABLE "RBL_TEMPDB"."TEMPADVSECURITYVALUEDETAIL" MODIFY ("EFFECTIVEFROMTIMEKEY" NOT NULL ENABLE);
+  ALTER TABLE "RBL_TEMPDB"."TEMPADVSECURITYVALUEDETAIL" MODIFY ("EFFECTIVETOTIMEKEY" NOT NULL ENABLE);

@@ -1,0 +1,14 @@
+--------------------------------------------------------
+--  DDL for Table STAGE_SS2K5_SQL_MODULES
+--------------------------------------------------------
+
+  CREATE GLOBAL TEMPORARY TABLE "ACL_RBL_MISDB_PROD"."STAGE_SS2K5_SQL_MODULES" 
+   (	"SVRID_FK" NUMBER(38,0), 
+	"DBID_GEN_FK" NUMBER(38,0), 
+	"OBJID_GEN" NUMBER(38,0), 
+	"DEFINITION" CLOB, 
+	"OBJECT_ID" NUMBER(38,0)
+   ) ON COMMIT PRESERVE ROWS 
+ LOB ("DEFINITION") STORE AS BASICFILE (
+  ENABLE STORAGE IN ROW CHUNK 8192 RETENTION 
+  NOCACHE ) ;

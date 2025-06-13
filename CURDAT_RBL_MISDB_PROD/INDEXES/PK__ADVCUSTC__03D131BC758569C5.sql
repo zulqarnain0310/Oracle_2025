@@ -1,0 +1,7 @@
+--------------------------------------------------------
+--  DDL for Index PK__ADVCUSTC__03D131BC758569C5
+--------------------------------------------------------
+
+  CREATE UNIQUE INDEX "CURDAT_RBL_MISDB_PROD"."PK__ADVCUSTC__03D131BC758569C5" ON "CURDAT_RBL_MISDB_PROD"."ADVCUSTCAL" ("ENTITYKEY") 
+  PCTFREE 10 INITRANS 2 MAXTRANS 255 COMPUTE STATISTICS 
+  TABLESPACE "USERS" ;

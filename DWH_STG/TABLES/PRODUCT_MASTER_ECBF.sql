@@ -1,0 +1,12 @@
+--------------------------------------------------------
+--  DDL for Table PRODUCT_MASTER_ECBF
+--------------------------------------------------------
+
+  CREATE TABLE "DWH_STG"."PRODUCT_MASTER_ECBF" 
+   (	"PRODUCTTYPE" VARCHAR2(10 BYTE), 
+	"PRODUCT_CODE" VARCHAR2(65 BYTE), 
+	"PRODUCT_DESCRIPTION" NUMBER(*,0)
+   ) SEGMENT CREATION DEFERRED 
+  PCTFREE 10 PCTUSED 40 INITRANS 1 MAXTRANS 255 
+ NOCOMPRESS LOGGING
+  TABLESPACE "USERS" ;

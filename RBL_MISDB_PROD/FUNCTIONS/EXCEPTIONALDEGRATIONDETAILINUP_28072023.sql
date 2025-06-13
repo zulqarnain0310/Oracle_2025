@@ -1,0 +1,1355 @@
+--------------------------------------------------------
+--  DDL for Function EXCEPTIONALDEGRATIONDETAILINUP_28072023
+--------------------------------------------------------
+
+  CREATE OR REPLACE EDITIONABLE FUNCTION "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" 
+-- =============================================
+ -- Author:				<Amar>
+ -- Create date:			<03/03/2017>
+ -- Description:			<AdvFacBillDetail Table Insert/ Update>
+ -- =============================================
+
+(
+  --@AccountID			INT				= 0	
+  v_DegrationAlt_Key IN NUMBER DEFAULT 0 ,
+  v_SourceAlt_Key IN NUMBER DEFAULT 0 ,
+  v_AccountID IN VARCHAR2 DEFAULT NULL ,
+  v_CustomerID IN VARCHAR2 DEFAULT NULL ,
+  v_FlagAlt_Key IN VARCHAR2 DEFAULT NULL ,
+  v_Date IN VARCHAR2 DEFAULT NULL ,
+  v_Amount IN NUMBER,
+  v_MarkingAlt_Key IN NUMBER,
+  --,@ExceptionDegradation_ChangeFields varchar(100)=null-- ,@AuthorisationStatus		char(5)		=null-- ,@Remark				varchar(200)	=null--,@ExceptionDegradation_ChangeFields		varchar(200)	=null
+  v_ExceptionalDegrationDetail_ChangeFields IN VARCHAR2 DEFAULT NULL ,
+  iv_ErrorHandle IN NUMBER DEFAULT 0 ,
+  iv_ExEntityKey IN NUMBER DEFAULT 0 ,
+  --,@EffectiveFromTimeKey--,@EffectiveToTimeKey--,@CreatedBy--,@DateCreated--,@ModifiedBy--,@DateModified--,@ApprovedBy-- ,@DateApproved-- ,@D2Ktimestamp---------D2k System Common Columns		--
+  v_Remark IN VARCHAR2 DEFAULT ' ' ,
+  v_MenuID IN NUMBER DEFAULT 0 ,
+  v_OperationFlag IN NUMBER DEFAULT 0 ,
+  v_AuthMode IN CHAR DEFAULT 'N' ,
+  v_IsMOC IN CHAR DEFAULT 'N' ,
+  v_EffectiveFromTimeKey IN NUMBER DEFAULT 0 ,
+  v_EffectiveToTimeKey IN NUMBER DEFAULT 0 ,
+  v_TimeKey IN NUMBER DEFAULT 0 ,
+  v_CrModApBy IN VARCHAR2 DEFAULT ' ' ,
+  v_D2Ktimestamp OUT NUMBER/* DEFAULT 0*/,
+  v_Result OUT NUMBER/* DEFAULT 0*/,
+  v_BranchCode IN VARCHAR2 DEFAULT NULL ,
+  v_ScreenEntityId IN NUMBER DEFAULT NULL 
+)
+RETURN NUMBER
+AS
+   v_ExEntityKey NUMBER(10,0) := iv_ExEntityKey;
+   v_ErrorHandle NUMBER(10,0) := iv_ErrorHandle;
+   v_AuthorisationStatus VARCHAR2(2) := NULL;
+   v_CreatedBy VARCHAR2(20) := NULL;
+   v_DateCreated DATE := NULL;
+   v_ModifiedBy VARCHAR2(20) := NULL;
+   v_DateModified DATE := NULL;
+   v_ApprovedBy VARCHAR2(20) := NULL;
+   v_DateApproved DATE := NULL;
+   v_parameterName_1 VARCHAR2(50);
+   v_cursor SYS_REFCURSOR;
+
+BEGIN
+
+   /*TODO:SQLDEV*/ SET DATEFORMAT DMY /*END:SQLDEV*/
+   --    DECLARE @Parameter varchar(max) = (select 'SourceSystem|' + convert(varchar,ISNULL(@SourceAlt_Key,' ')) + '}'+ 'ACID|' + isnull(@AccountID,' ')
+   --+ '}'+ 'CustID|'+isnull(@CustomerID,'')+ '}'+ 'Flag|'+isnull(@FlagAlt_Key,'')+ '}'+ 'EffectiveDate|'+isnull(@Date,'')
+   --+ '}'+ 'Amount|'+convert(varchar,isnull(@Amount,'0'))+ '}'+ 'MarkingFlag|'+convert(varchar,isnull(@MarkingAlt_Key,'')))
+   ----DECLARE		@Result					INT				=0 
+   --exec SecurityCheckDataValidation 14571 ,@Parameter,@Result OUTPUT
+   --IF @Result = -1
+   --return -1
+   DBMS_OUTPUT.PUT_LINE(1);
+   SELECT ParameterName 
+
+     INTO v_parameterName_1
+     FROM DimParameter 
+    WHERE  DimParameterName = 'UploadFLagType'
+             AND ParameterAlt_Key = v_FlagAlt_Key
+             AND EffectiveFromTimeKey <= v_TimeKey
+             AND EffectiveToTimeKey >= v_TimeKey;
+   IF v_OperationFlag = 1 THEN
+    DECLARE
+      v_temp NUMBER(1, 0) := 0;
+
+    --- add
+   BEGIN
+      DBMS_OUTPUT.PUT_LINE(1);
+      -----CHECK DUPLICATE BILL NO AT BRANCH LEVEL
+      BEGIN
+         SELECT 1 INTO v_temp
+           FROM DUAL
+          WHERE EXISTS ( SELECT 1 
+                         FROM RBL_MISDB_PROD.ExceptionalDegrationDetail 
+                          WHERE  AccountId = v_AccountID
+                                   AND FlagAlt_Key = v_FlagAlt_Key
+                                   AND NVL(AuthorisationStatus, 'A') = 'A'
+                         UNION 
+                         SELECT 1 
+                         FROM RBL_MISDB_PROD.ExceptionalDegrationDetail_Mod 
+                          WHERE  ( EffectiveFromTimeKey <= v_TimeKey
+                                   AND EffectiveToTimeKey >= v_TimeKey )
+                                   AND AccountId = v_AccountID
+                                   AND FlagAlt_Key = v_FlagAlt_Key
+                                   AND AuthorisationStatus IN ( 'NP','MP','DP','A','RM' )
+       );
+      EXCEPTION
+         WHEN OTHERS THEN
+            NULL;
+      END;
+
+      IF v_temp = 1 THEN
+
+      BEGIN
+         DBMS_OUTPUT.PUT_LINE(2);
+         v_Result := -4 ;
+         RETURN v_Result;-- CUSTOMERID ALEADY EXISTS
+
+      END;
+      END IF;
+
+   END;
+   END IF;
+   BEGIN
+
+      BEGIN
+         --SQL Server BEGIN TRANSACTION;
+         utils.incrementTrancount;
+         -----
+         DBMS_OUTPUT.PUT_LINE(3);
+         --np- new,  mp - modified, dp - delete, fm - further modifief, A- AUTHORISED , 'RM' - REMARK 
+         IF v_OperationFlag = 1
+           AND v_AuthMode = 'Y' THEN
+
+          -- ADD
+         BEGIN
+            DBMS_OUTPUT.PUT_LINE('Add');
+            v_CreatedBy := v_CrModApBy ;
+            v_DateCreated := SYSDATE ;
+            v_AuthorisationStatus := 'NP' ;
+            GOTO ExceptionalDegrationDetail_Insert;
+            <<ExceptionalDegrationDetail_Insert_Add>>
+
+         END;
+         ELSE
+            IF ( v_OperationFlag = 2
+              OR v_OperationFlag = 3 )
+              AND v_AuthMode = 'Y' THEN
+
+             --EDIT AND DELETE
+            BEGIN
+               DBMS_OUTPUT.PUT_LINE(4);
+               v_CreatedBy := v_CrModApBy ;
+               v_DateCreated := SYSDATE ;
+               v_Modifiedby := v_CrModApBy ;
+               v_DateModified := SYSDATE ;
+               DBMS_OUTPUT.PUT_LINE(5);
+               IF v_OperationFlag = 2 THEN
+
+               BEGIN
+                  DBMS_OUTPUT.PUT_LINE('Edit');
+                  v_AuthorisationStatus := 'MP' ;
+
+               END;
+               ELSE
+
+               BEGIN
+                  DBMS_OUTPUT.PUT_LINE('DELETE');
+                  v_AuthorisationStatus := 'DP' ;
+
+               END;
+               END IF;
+               ---FIND CREATED BY FROM MAIN TABLE
+               SELECT CreatedBy ,
+                      DateCreated 
+
+                 INTO v_CreatedBy,
+                      v_DateCreated
+                 FROM RBL_MISDB_PROD.ExceptionalDegrationDetail 
+                WHERE  ( EffectiveFromTimeKey <= v_TimeKey
+                         AND EffectiveToTimeKey >= v_TimeKey )
+                         AND AccountID = v_AccountID
+                         AND FlagAlt_Key = v_FlagAlt_Key;
+               ---FIND CREATED BY FROM MAIN TABLE IN CASE OF DATA IS NOT AVAILABLE IN MAIN TABLE
+               IF NVL(v_CreatedBy, ' ') = ' ' THEN
+
+               BEGIN
+                  DBMS_OUTPUT.PUT_LINE('NOT AVAILABLE IN MAIN');
+                  SELECT CreatedBy ,
+                         DateCreated 
+
+                    INTO v_CreatedBy,
+                         v_DateCreated
+                    FROM RBL_MISDB_PROD.ExceptionalDegrationDetail_Mod 
+                   WHERE  ( EffectiveFromTimeKey <= v_TimeKey
+                            AND EffectiveToTimeKey >= v_TimeKey )
+                            AND AccountID = v_AccountID
+                            AND FlagAlt_Key = v_FlagAlt_Key
+                            AND AuthorisationStatus IN ( 'NP','MP','A','RM' )
+                  ;
+
+               END;
+               ELSE
+
+                ---IF DATA IS AVAILABLE IN MAIN TABLE
+               BEGIN
+                  DBMS_OUTPUT.PUT_LINE('AVAILABLE IN MAIN');
+                  ----UPDATE FLAG IN MAIN TABLES AS MP
+                  UPDATE RBL_MISDB_PROD.ExceptionalDegrationDetail
+                     SET AuthorisationStatus = v_AuthorisationStatus
+                   WHERE  ( EffectiveFromTimeKey <= v_TimeKey
+                    AND EffectiveToTimeKey >= v_TimeKey )
+                    AND AccountID = v_AccountID
+                    AND FlagAlt_Key = v_FlagAlt_Key;
+
+               END;
+               END IF;
+               --UPDATE NP,MP  STATUS 
+               IF v_OperationFlag = 2 THEN
+
+               BEGIN
+                  UPDATE RBL_MISDB_PROD.ExceptionalDegrationDetail
+                     SET AuthorisationStatus = v_AuthorisationStatus
+                   WHERE  ( EffectiveFromTimeKey <= v_TimeKey
+                    AND EffectiveToTimeKey >= v_TimeKey )
+                    AND AccountID = v_AccountID
+                    AND FlagAlt_Key = v_FlagAlt_Key;
+                  MERGE INTO A 
+                  USING (SELECT A.ROWID row_id, v_AuthorisationStatus
+                  FROM A ,RBL_MISDB_PROD.ExceptionFinalStatusType a
+                         JOIN DimParameter b   ON a.StatusType = b.ParameterName
+                         AND B.EffectiveFromTimeKey <= v_TimeKey
+                         AND B.EffectiveToTimeKey >= v_TimeKey 
+                   WHERE ( A.EffectiveFromTimeKey <= v_TimeKey
+                    AND A.EffectiveToTimeKey >= v_TimeKey )
+                    AND A.ACID = v_AccountID
+                    AND B.ParameterAlt_Key = v_FlagAlt_Key
+                    AND b.DimParameterName = 'UploadFLagType') src
+                  ON ( A.ROWID = src.row_id )
+                  WHEN MATCHED THEN UPDATE SET b.AuthorisationStatus = v_AuthorisationStatus;
+                  UPDATE ExceptionalDegrationDetail_Mod
+                     SET AuthorisationStatus = 'FM',
+                         ModifiedBy = v_Modifiedby,
+                         DateModified = v_DateModified
+                   WHERE  ( EffectiveFromTimeKey <= v_TimeKey
+                    AND EffectiveToTimeKey >= v_TimeKey )
+                    AND AccountID = v_AccountID
+                    AND FlagAlt_Key = v_FlagAlt_Key
+                    AND AuthorisationStatus IN ( 'NP','MP','RM' )
+                  ;
+
+               END;
+               END IF;
+               --GOTO AdvFacBillDetail_Insert
+               --AdvFacBillDetail_Insert_Edit_Delete:
+               GOTO ExceptionalDegrationDetail_Insert;
+               <<ExceptionalDegrationDetail_Insert_Edit_Delete>>
+
+            END;
+            ELSE
+               IF v_OperationFlag = 3
+                 AND v_AuthMode = 'N' THEN
+
+               BEGIN
+                  -- DELETE WITHOUT MAKER CHECKER
+                  v_Modifiedby := v_CrModApBy ;
+                  v_DateModified := SYSDATE ;
+                  UPDATE ExceptionalDegrationDetail
+                     SET ModifiedBy = v_Modifiedby,
+                         DateModified = v_DateModified,
+                         EffectiveToTimeKey = v_EffectiveFromTimeKey - 1
+                   WHERE  ( EffectiveFromTimeKey = EffectiveFromTimeKey
+                    AND EffectiveToTimeKey >= v_TimeKey )
+                    AND AccountID = v_AccountID
+                    AND FlagAlt_Key = v_FlagAlt_Key;
+
+               END;
+
+               --UPDATE  ExceptionFinalStatusType SET	
+
+               --					ModifyBy =@Modifiedby 
+
+               --					,DateModified =@DateModified 
+
+               --					,EffectiveToTimeKey =@EffectiveFromTimeKey-1
+
+               --				WHERE (EffectiveFromTimeKey=EffectiveFromTimeKey AND EffectiveToTimeKey>=@TimeKey) AND ACID=@AccountID
+
+               --and StatusType=@parameterName_1
+
+               ---------------------------------------------------------------------
+               ELSE
+                  IF v_OperationFlag = 21
+                    AND v_AuthMode = 'Y' THEN
+                   DECLARE
+                     v_temp NUMBER(1, 0) := 0;
+
+                  BEGIN
+                     v_ApprovedBy := v_CrModApBy ;
+                     v_DateApproved := SYSDATE ;
+                     UPDATE ExceptionalDegrationDetail_Mod
+                        SET AuthorisationStatus = 'R',
+                            ApprovedBy = v_ApprovedBy,
+                            DateApproved = v_DateApproved,
+                            EffectiveToTimeKey = v_EffectiveFromTimeKey - 1
+                      WHERE  ( EffectiveFromTimeKey <= v_TimeKey
+                       AND EffectiveToTimeKey >= v_TimeKey )
+                       AND AccountID = v_AccountID
+                       AND FlagAlt_Key = v_FlagAlt_Key
+                       AND AuthorisationStatus IN ( 'NP','MP','DP','RM','1A' )
+                     ;
+                     BEGIN
+                        SELECT 1 INTO v_temp
+                          FROM DUAL
+                         WHERE EXISTS ( SELECT 1 
+                                        FROM ExceptionalDegrationDetail 
+                                         WHERE  ( EffectiveFromTimeKey <= v_TimeKey
+                                                  AND EffectiveToTimeKey >= v_Timekey )
+                                                  AND AccountID = v_AccountID
+                                                  AND FlagAlt_Key = v_FlagAlt_Key );
+                     EXCEPTION
+                        WHEN OTHERS THEN
+                           NULL;
+                     END;
+
+                     IF v_temp = 1 THEN
+
+                     BEGIN
+                        UPDATE ExceptionalDegrationDetail
+                           SET AuthorisationStatus = 'A'
+                         WHERE  ( EffectiveFromTimeKey <= v_TimeKey
+                          AND EffectiveToTimeKey >= v_TimeKey )
+                          AND AccountID = v_AccountID
+                          AND FlagAlt_Key = v_FlagAlt_Key
+                          AND AuthorisationStatus IN ( 'MP','DP','RM' )
+                        ;
+
+                     END;
+                     END IF;
+
+                  END;
+
+                  -----------------------------------------------------------------------
+                  ELSE
+                     IF v_OperationFlag = 17
+                       AND v_AuthMode = 'Y' THEN
+                      DECLARE
+                        v_temp NUMBER(1, 0) := 0;
+
+                     BEGIN
+                        v_ApprovedBy := v_CrModApBy ;
+                        v_DateApproved := SYSDATE ;
+                        UPDATE ExceptionalDegrationDetail_Mod
+                           SET AuthorisationStatus = 'R',
+                               ApprovedByFirstLevel = v_ApprovedBy,
+                               DateApprovedFirstLevel = v_DateApproved,
+                               EffectiveToTimeKey = v_EffectiveFromTimeKey - 1
+                         WHERE  ( EffectiveFromTimeKey <= v_TimeKey
+                          AND EffectiveToTimeKey >= v_TimeKey )
+                          AND AccountID = v_AccountID
+                          AND FlagAlt_Key = v_FlagAlt_Key
+                          AND AuthorisationStatus IN ( 'NP','MP','DP','RM' )
+                        ;
+                        BEGIN
+                           SELECT 1 INTO v_temp
+                             FROM DUAL
+                            WHERE EXISTS ( SELECT 1 
+                                           FROM ExceptionalDegrationDetail 
+                                            WHERE  ( EffectiveFromTimeKey <= v_TimeKey
+                                                     AND EffectiveToTimeKey >= v_Timekey )
+                                                     AND AccountID = v_AccountID );
+                        EXCEPTION
+                           WHEN OTHERS THEN
+                              NULL;
+                        END;
+
+                        IF v_temp = 1 THEN
+
+                        BEGIN
+                           UPDATE ExceptionalDegrationDetail
+                              SET AuthorisationStatus = 'A'
+                            WHERE  ( EffectiveFromTimeKey <= v_TimeKey
+                             AND EffectiveToTimeKey >= v_TimeKey )
+                             AND AccountID = v_AccountID
+                             AND FlagAlt_Key = v_FlagAlt_Key
+                             AND AuthorisationStatus IN ( 'MP','DP','RM' )
+                           ;
+
+                        END;
+                        END IF;
+
+                     END;
+                     ELSE
+                        IF v_OperationFlag = 18 THEN
+
+                        BEGIN
+                           DBMS_OUTPUT.PUT_LINE(18);
+                           v_ApprovedBy := v_CrModApBy ;
+                           v_DateApproved := SYSDATE ;
+                           UPDATE ExceptionalDegrationDetail_Mod
+                              SET AuthorisationStatus = 'RM'
+                            WHERE  ( EffectiveFromTimeKey <= v_TimeKey
+                             AND EffectiveToTimeKey >= v_TimeKey )
+                             AND AuthorisationStatus IN ( 'NP','MP','DP','RM' )
+
+                             AND AccountId = v_AccountID
+                             AND FlagAlt_Key = v_FlagAlt_Key;
+
+                        END;
+
+                        --------------------------------------------------------
+                        ELSE
+                           IF v_OperationFlag = 16 THEN
+
+                           BEGIN
+                              v_ApprovedBy := v_CrModApBy ;
+                              v_DateApproved := SYSDATE ;
+                              UPDATE ExceptionalDegrationDetail_Mod
+                                 SET AuthorisationStatus = '1A',
+                                     ApprovedByFirstLevel = v_ApprovedBy,
+                                     DateApprovedFirstLevel = v_DateApproved
+                               WHERE  AccountId = v_AccountID
+                                AND FlagAlt_Key = v_FlagAlt_Key
+                                AND AuthorisationStatus IN ( 'NP','MP','DP','RM' )
+                              ;
+
+                           END;
+
+                           --------------------------------------------------------
+                           ELSE
+                              IF v_OperationFlag = 20
+                                OR v_AuthMode = 'N' THEN
+
+                              BEGIN
+                                 DBMS_OUTPUT.PUT_LINE('Authorise');
+                                 -------set parameter for  maker checker disabled
+                                 IF v_AuthMode = 'N' THEN
+
+                                 BEGIN
+                                    IF v_OperationFlag = 1 THEN
+
+                                    BEGIN
+                                       v_CreatedBy := v_CrModApBy ;
+                                       v_DateCreated := SYSDATE ;
+
+                                    END;
+                                    ELSE
+
+                                    BEGIN
+                                       v_ModifiedBy := v_CrModApBy ;
+                                       v_DateModified := SYSDATE ;
+                                       SELECT CreatedBy ,
+                                              DATECreated 
+
+                                         INTO v_CreatedBy,
+                                              v_DateCreated
+                                         FROM RBL_MISDB_PROD.ExceptionalDegrationDetail 
+                                        WHERE  ( EffectiveFromTimeKey <= v_TimeKey
+                                                 AND EffectiveToTimeKey >= v_TimeKey )
+                                                 AND AccountID = v_AccountID
+                                                 AND FlagAlt_Key = v_FlagAlt_Key;
+                                       v_ApprovedBy := v_CrModApBy ;
+                                       v_DateApproved := SYSDATE ;
+
+                                    END;
+                                    END IF;
+
+                                 END;
+                                 END IF;
+                                 ---set parameters and UPDATE mod table in case maker checker enabled
+                                 IF v_AuthMode = 'Y' THEN
+                                  DECLARE
+                                    v_DelStatus CHAR(2) := ' ';
+                                    v_CurrRecordFromTimeKey NUMBER(5,0) := 0;
+                                    v_CurEntityKey NUMBER(10,0) := 0;
+
+                                 BEGIN
+                                    DBMS_OUTPUT.PUT_LINE('B');
+                                    DBMS_OUTPUT.PUT_LINE('C');
+                                    SELECT MAX(Entity_Key)  
+
+                                      INTO v_ExEntityKey
+                                      FROM RBL_MISDB_PROD.ExceptionalDegrationDetail_Mod 
+                                     WHERE  ( EffectiveFromTimeKey <= v_Timekey
+                                              AND EffectiveToTimeKey >= v_Timekey )
+                                              AND AccountID = v_AccountID
+                                              AND FlagAlt_Key = v_FlagAlt_Key
+                                              AND AuthorisationStatus IN ( 'NP','MP','DP','RM','1A' )
+                                    ;
+                                    SELECT AuthorisationStatus ,
+                                           CreatedBy ,
+                                           DATECreated ,
+                                           ModifiedBy ,
+                                           DateModified 
+
+                                      INTO v_DelStatus,
+                                           v_CreatedBy,
+                                           v_DateCreated,
+                                           v_ModifiedBy,
+                                           v_DateModified
+                                      FROM ExceptionalDegrationDetail_Mod 
+                                     WHERE  Entity_Key = v_ExEntityKey;
+                                    v_ApprovedBy := v_CrModApBy ;
+                                    v_DateApproved := SYSDATE ;
+                                    SELECT MIN(Entity_Key)  
+
+                                      INTO v_ExEntityKey
+                                      FROM ExceptionalDegrationDetail_Mod 
+                                     WHERE  ( EffectiveFromTimeKey <= v_Timekey
+                                              AND EffectiveToTimeKey >= v_Timekey )
+                                              AND AccountID = v_AccountID
+                                              AND FlagAlt_Key = v_FlagAlt_Key
+                                              AND AuthorisationStatus IN ( 'NP','MP','DP','RM','1A' )
+                                    ;
+                                    SELECT EffectiveFromTimeKey 
+
+                                      INTO v_CurrRecordFromTimeKey
+                                      FROM ExceptionalDegrationDetail_Mod 
+                                     WHERE  Entity_Key = v_ExEntityKey;
+                                    UPDATE ExceptionalDegrationDetail_Mod
+                                       SET EffectiveToTimeKey = v_CurrRecordFromTimeKey - 1
+                                     WHERE  ( EffectiveFromTimeKey <= v_Timekey
+                                      AND EffectiveToTimeKey >= v_Timekey )
+                                      AND AccountID = v_AccountID
+                                      AND FlagAlt_Key = v_FlagAlt_Key
+                                      AND AuthorisationStatus = 'A';
+                                    -------DELETE RECORD AUTHORISE
+                                    IF v_DelStatus = 'DP' THEN
+                                     DECLARE
+                                       v_temp NUMBER(1, 0) := 0;
+
+                                    BEGIN
+                                       UPDATE ExceptionalDegrationDetail_Mod
+                                          SET AuthorisationStatus = 'A',
+                                              ApprovedBy = v_ApprovedBy,
+                                              DateApproved = v_DateApproved,
+                                              EffectiveToTimeKey = v_EffectiveFromTimeKey - 1
+                                        WHERE  AccountID = v_AccountID
+                                         AND FlagAlt_Key = v_FlagAlt_Key
+                                         AND AuthorisationStatus IN ( 'NP','MP','DP','RM','1A' )
+                                       ;
+                                       BEGIN
+                                          SELECT 1 INTO v_temp
+                                            FROM DUAL
+                                           WHERE EXISTS ( SELECT 1 
+                                                          FROM ExceptionalDegrationDetail 
+                                                           WHERE  ( EffectiveFromTimeKey <= v_TimeKey
+                                                                    AND EffectiveToTimeKey >= v_TimeKey )
+                                                                    AND AccountID = v_AccountID
+                                                                    AND FlagAlt_Key = v_FlagAlt_Key );
+                                       EXCEPTION
+                                          WHEN OTHERS THEN
+                                             NULL;
+                                       END;
+
+                                       IF v_temp = 1 THEN
+
+                                       BEGIN
+                                          UPDATE ExceptionalDegrationDetail
+                                             SET AuthorisationStatus = 'A',
+                                                 ModifiedBy = v_ModifiedBy,
+                                                 DateModified = v_DateModified,
+                                                 ApprovedBy = v_ApprovedBy,
+                                                 DateApproved = v_DateApproved,
+                                                 EffectiveToTimeKey = v_EffectiveFromTimeKey - 1
+                                           WHERE  ( EffectiveFromTimeKey <= v_Timekey
+                                            AND EffectiveToTimeKey >= v_Timekey )
+                                            AND AccountID = v_AccountID
+                                            AND FlagAlt_Key = v_FlagAlt_Key;
+
+                                       END;
+                                       END IF;
+
+                                    END;
+
+                                    --IF EXISTS(SELECT 1 FROM ExceptionFinalStatusType WHERE (EffectiveFromTimeKey<=@TimeKey AND EffectiveToTimeKey>=@TimeKey) 
+
+                                    --				AND ACID=@AccountID  and StatusType=@parameterName_1)
+
+                                    --BEGIN
+
+                                    --		UPDATE ExceptionFinalStatusType
+
+                                    --			SET AuthorisationStatus ='A'
+
+                                    --				,ModifyBy=@ModifiedBy
+
+                                    --				,DateModified=@DateModified
+
+                                    --				,ApprovedBy=@ApprovedBy
+
+                                    --				,DateApproved=@DateApproved
+
+                                    --				,EffectiveToTimeKey =@EffectiveFromTimeKey-1
+
+                                    --			WHERE (EffectiveFromTimeKey<=@Timekey AND EffectiveToTimeKey >=@Timekey)
+
+                                    --					AND ACID=@AccountID  and StatusType=@parameterName_1
+
+                                    --END
+                                     -- END OF DELETE BLOCK
+                                    ELSE
+
+                                     -- OTHER THAN DELETE STATUS
+                                    BEGIN
+                                       UPDATE ExceptionalDegrationDetail_Mod
+                                          SET AuthorisationStatus = 'A',
+                                              ApprovedBy = v_ApprovedBy,
+                                              DateApproved = v_DateApproved
+                                        WHERE  AccountID = v_AccountID
+                                         AND FlagAlt_Key = v_FlagAlt_Key
+                                         AND AuthorisationStatus IN ( 'NP','MP','RM','1A' )
+                                       ;
+
+                                    END;
+                                    END IF;
+
+                                 END;
+                                 END IF;
+                                 IF v_DelStatus <> 'DP'
+                                   OR v_AuthMode = 'N' THEN
+                                  DECLARE
+                                    v_IsAvailable CHAR(1) := 'N';
+                                    v_IsSCD2 CHAR(1) := 'N';
+                                    v_temp NUMBER(1, 0) := 0;
+
+                                 BEGIN
+                                    v_AuthorisationStatus := 'A' ;
+                                    BEGIN
+                                       SELECT 1 INTO v_temp
+                                         FROM DUAL
+                                        WHERE EXISTS ( SELECT 1 
+                                                       FROM ExceptionalDegrationDetail 
+                                                        WHERE  ( EffectiveFromTimeKey <= v_TimeKey
+                                                                 AND EffectiveToTimeKey >= v_TimeKey )
+                                                                 AND AccountID = v_AccountID
+                                                                 AND FlagAlt_Key = v_FlagAlt_Key );
+                                    EXCEPTION
+                                       WHEN OTHERS THEN
+                                          NULL;
+                                    END;
+
+                                    IF v_temp = 1 THEN
+                                     DECLARE
+                                       v_temp NUMBER(1, 0) := 0;
+
+                                    BEGIN
+                                       v_IsAvailable := 'Y' ;
+                                       v_AuthorisationStatus := 'A' ;
+                                       BEGIN
+                                          SELECT 1 INTO v_temp
+                                            FROM DUAL
+                                           WHERE EXISTS ( SELECT 1 
+                                                          FROM ExceptionalDegrationDetail 
+                                                           WHERE  ( EffectiveFromTimeKey <= v_TimeKey
+                                                                    AND EffectiveToTimeKey >= v_TimeKey )
+                                                                    AND EffectiveFromTimeKey = v_TimeKey
+                                                                    AND AccountID = v_AccountID
+                                                                    AND FlagAlt_Key = v_FlagAlt_Key );
+                                       EXCEPTION
+                                          WHEN OTHERS THEN
+                                             NULL;
+                                       END;
+
+                                       IF v_temp = 1 THEN
+
+                                       BEGIN
+                                          DBMS_OUTPUT.PUT_LINE('BBBB');
+                                          UPDATE ExceptionalDegrationDetail
+                                             SET DegrationAlt_Key = v_DegrationAlt_Key,
+                                                 SourceAlt_Key = v_SourceAlt_Key,
+                                                 AccountID = v_AccountID,
+                                                 CustomerID = v_CustomerID,
+                                                 FlagAlt_Key = v_FlagAlt_Key,
+                                                 Date_ = v_Date
+                                                 --,Date= convert(varchar(20),@Date,103)
+                                                  --,AuthorisationStatus= @AuthorisationStatus
+                                                  --,EffectiveFromTimeKey= @EffectiveFromTimeKey
+                                                  --,EffectiveToTimeKey= @EffectiveToTimeKey
+                                                  --,CreatedBy= @CreatedBy
+                                                  --,DateCreated=@DateCreated
+                                                 ,
+                                                 ModifiedBy = v_ModifiedBy,
+                                                 DateModified = v_DateModified,
+                                                 ApprovedBy = CASE 
+                                                                   WHEN v_AuthMode = 'Y' THEN v_ApprovedBy
+                                                 ELSE NULL
+                                                    END,
+                                                 DateApproved = CASE 
+                                                                     WHEN v_AuthMode = 'Y' THEN v_DateApproved
+                                                 ELSE NULL
+                                                    END,
+                                                 AuthorisationStatus = CASE 
+                                                                            WHEN v_AuthMode = 'Y' THEN 'A'
+                                                 ELSE NULL
+                                                    END
+                                           WHERE  ( EffectiveFromTimeKey <= v_TimeKey
+                                            AND EffectiveToTimeKey >= v_TimeKey )
+                                            AND EffectiveFromTimeKey = v_EffectiveFromTimeKey
+                                            AND AccountID = v_AccountID
+                                            AND FlagAlt_Key = v_FlagAlt_Key;
+                                          UPDATE ExceptionFinalStatusType
+                                             SET
+                                             -- DegrationAlt_Key = @DegrationAlt_Key
+                                           SourceAlt_Key = v_SourceAlt_Key,
+                                           ACID = v_AccountID,
+                                           CustomerID = v_CustomerID,
+                                           StatusType = v_parametername_1,
+                                           StatusDate = v_Date,
+                                           Amount = v_Amount
+                                           --,Date= convert(varchar(20),@Date,103)
+                                            --,AuthorisationStatus= @AuthorisationStatus
+                                            --,EffectiveFromTimeKey= @EffectiveFromTimeKey
+                                            --,EffectiveToTimeKey= @EffectiveToTimeKey
+                                            --,CreatedBy= @CreatedBy
+                                            --,DateCreated=@DateCreated
+                                           ,
+                                           ModifyBy = v_ModifiedBy,
+                                           DateModified = v_DateModified,
+                                           ApprovedBy = CASE 
+                                                             WHEN v_AuthMode = 'Y' THEN v_ApprovedBy
+                                           ELSE NULL
+                                              END,
+                                           DateApproved = CASE 
+                                                               WHEN v_AuthMode = 'Y' THEN v_DateApproved
+                                           ELSE NULL
+                                              END,
+                                           AuthorisationStatus = CASE 
+                                                                      WHEN v_AuthMode = 'Y' THEN 'A'
+                                           ELSE NULL
+                                              END
+                                           WHERE  ( EffectiveFromTimeKey <= v_TimeKey
+                                            AND EffectiveToTimeKey >= v_TimeKey )
+                                            AND EffectiveFromTimeKey = v_EffectiveFromTimeKey
+                                            AND ACID = v_AccountID
+                                            AND StatusType = v_parametername_1;
+
+                                       END;
+                                       ELSE
+
+                                       BEGIN
+                                          v_IsSCD2 := 'Y' ;
+
+                                       END;
+                                       END IF;
+
+                                    END;
+                                    END IF;
+                                    IF v_IsAvailable = 'N'
+                                      OR v_IsSCD2 = 'Y' THEN
+                                     DECLARE
+                                       v_temp NUMBER(1, 0) := 0;
+
+                                    BEGIN
+                                       INSERT INTO ExceptionalDegrationDetail --Entity_Key
+
+                                         ( DegrationAlt_Key, SourceAlt_Key, AccountID, CustomerID, FlagAlt_Key, Date_, MarkingAlt_Key, Amount, AuthorisationStatus, EffectiveFromTimeKey, EffectiveToTimeKey, CreatedBy, DateCreated, ModifiedBy, DateModified, ApprovedBy, DateApproved )
+
+                                         --,ApprovedByFirstLevel
+
+                                         --,DateApprovedFirstLevel
+
+                                         -- ,D2Ktimestamp
+                                         VALUES ( v_DegrationAlt_Key, v_SourceAlt_Key, v_AccountID, v_CustomerID, v_FlagAlt_Key, v_Date, 
+                                       --,convert(varchar(20),@Date,103)
+                                       v_MarkingAlt_Key, v_Amount, v_AuthorisationStatus, v_EffectiveFromTimeKey, v_EffectiveToTimeKey, v_CreatedBy, v_DateCreated, CASE 
+                                                                                                                                                                         WHEN v_AuthMode = 'Y'
+                                                                                                                                                                           OR v_IsAvailable = 'Y' THEN v_ModifiedBy
+                                       ELSE NULL
+                                          END, CASE 
+                                                    WHEN v_AuthMode = 'Y'
+                                                      OR v_IsAvailable = 'Y' THEN v_DateModified
+                                       ELSE NULL
+                                          END, CASE 
+                                                    WHEN v_AUTHMODE = 'Y' THEN v_ApprovedBy
+                                       ELSE NULL
+                                          END, CASE 
+                                                    WHEN v_AUTHMODE = 'Y' THEN v_DateApproved
+                                       ELSE NULL
+                                          END );
+                                       --,@CrModApBy
+                                       --,Getdate()
+                                       -- ,@D2Ktimestamp
+                                       INSERT INTO ExceptionFinalStatusType --Entity_Key
+
+                                         ( SourceAlt_Key, CustomerID, ACID, StatusType ------
+                                       , StatusDate, Amount, AuthorisationStatus, EffectiveFromTimeKey, EffectiveToTimeKey, CreatedBy, DateCreated, ModifyBy, DateModified, ApprovedBy, DateApproved )
+                                         ( 
+                                           -- ,D2Ktimestamp
+
+                                           --,ApprovedByFirstLevel
+
+                                           --,DateApprovedFirstLevel
+                                           SELECT v_SourceAlt_Key ,
+                                                  v_CustomerID ,
+                                                  v_AccountID ,
+                                                  A.ParameterName Marking  ,
+                                                  v_Date ,
+                                                  v_Amount ,
+                                                  v_AuthorisationStatus ,
+                                                  v_EffectiveFromTimeKey ,
+                                                  v_EffectiveToTimeKey ,
+                                                  v_CreatedBy ,
+                                                  v_DateCreated ,
+                                                  CASE 
+                                                       WHEN v_AuthMode = 'Y'
+                                                         OR v_IsAvailable = 'Y' THEN v_ModifiedBy
+                                                  ELSE NULL
+                                                     END col  ,
+                                                  CASE 
+                                                       WHEN v_AuthMode = 'Y'
+                                                         OR v_IsAvailable = 'Y' THEN v_DateModified
+                                                  ELSE NULL
+                                                     END col  ,
+                                                  CASE 
+                                                       WHEN v_AUTHMODE = 'Y' THEN v_ApprovedBy
+                                                  ELSE NULL
+                                                     END col  ,
+                                                  CASE 
+                                                       WHEN v_AUTHMODE = 'Y' THEN v_DateApproved
+                                                  ELSE NULL
+                                                     END col  
+
+                                           -- ,@D2Ktimestamp
+
+                                           --,@CrModApBy
+
+                                           --,GETDATE()
+                                           FROM DimParameter A
+                                            WHERE  DimParameterName = 'UploadFLagType'
+
+                                                     --AND ParameterAlt_Key= @MarkingAlt_Key
+                                                     AND ParameterAlt_Key = v_FlagAlt_Key );
+                                       BEGIN
+                                          SELECT 1 INTO v_temp
+                                            FROM DUAL
+                                           WHERE EXISTS ( SELECT 1 
+                                                          FROM ExceptionFinalStatusType 
+                                                           WHERE  AuthorisationStatus = 'A'
+                                                                    AND ACID = v_AccountID
+                                                                    AND EffectiveFromTimeKey <= v_TimeKey
+                                                                    AND EffectiveToTimeKey >= v_TimeKey );
+                                       EXCEPTION
+                                          WHEN OTHERS THEN
+                                             NULL;
+                                       END;
+
+                                       IF v_temp = 1 THEN
+
+                                       BEGIN
+                                          UPDATE ExceptionFinalStatusType
+                                             SET EffectiveToTimeKey = v_TimeKey - 1
+                                           WHERE  ACID = v_AccountID
+                                            AND AuthorisationStatus = 'MP'
+                                            AND StatusType = v_parameterName_1;
+
+                                       END;
+                                       END IF;
+
+                                    END;
+                                    END IF;
+                                    --   if exists (select 1 from ExceptionalDegrationDetail where  AuthorisationStatus='A' 
+                                    --													 and AccountID=@AccountID 
+                                    --													 and  EffectiveFromTimeKey<=@TimeKey AND EffectiveToTimeKey>=@TimeKey )
+                                    --begin
+                                    --		update ExceptionalDegrationDetail
+                                    --		set EffectiveToTimeKey=@TimeKey-1
+                                    --		where AccountID=@AccountID
+                                    --		and AuthorisationStatus='MP'
+                                    --		and FlagAlt_Key=@FlagAlt_Key
+                                    --                             end
+                                    /*Adding Flag ---------- 02-04-2021*/
+                                    IF ( v_MarkingAlt_Key = 20 ) THEN
+
+                                    BEGIN
+                                       IF utils.object_id('TempDB..tt_Flags_20') IS NOT NULL THEN
+                                        EXECUTE IMMEDIATE ' TRUNCATE TABLE tt_Flags_20 ';
+                                       END IF;
+                                       DELETE FROM tt_Flags_20;
+                                       UTILS.IDENTITY_RESET('tt_Flags_20');
+
+                                       INSERT INTO tt_Flags_20 ( 
+                                       	SELECT A.AccountID ,
+                                               B.SplCatShortNameEnum 
+                                       	  FROM ExceptionalDegrationDetail_Mod A
+                                                 JOIN ( SELECT B.ParameterAlt_Key ,
+                                                               A.SplCatShortNameEnum 
+                                                        FROM DimAcSplCategory A
+                                                               JOIN DimParameter B   ON A.SplCatName = B.ParameterName
+                                       	  AND B.EffectiveToTimeKey = 49999
+                                                         WHERE  A.SplCatGroup = 'SplFlags'
+                                                                  AND A.EffectiveToTimeKey = 49999
+                                                                  AND B.DimParameterName = 'uploadflagtype' ) B   ON A.FlagAlt_Key = B.ParameterAlt_Key
+                                       	 WHERE  A.EffectiveToTimeKey = 49999
+                                                  AND A.MarkingAlt_Key = 20
+                                                  AND A.Entity_Key = ( SELECT MAX(Entity_Key)  
+                                                                       FROM ExceptionalDegrationDetail_Mod 
+                                                                        WHERE  AccountID = v_AccountID
+                                                                                 AND FlagAlt_Key = v_FlagAlt_Key ) );
+                                       MERGE INTO A 
+                                       USING (SELECT A.ROWID row_id, CASE 
+                                       WHEN NVL(A.SplFlag, ' ') = ' ' THEN B.SplCatShortNameEnum
+                                       ELSE A.SplFlag || ',' || B.SplCatShortNameEnum
+                                          END AS SplFlag
+                                       FROM A ,RBL_MISDB_PROD.AdvAcOtherDetail A
+                                              JOIN tt_Flags_20 B   ON A.RefSystemAcId = B.AccountID 
+                                        WHERE A.EffectiveToTimeKey = 49999) src
+                                       ON ( A.ROWID = src.row_id )
+                                       WHEN MATCHED THEN UPDATE SET A.SplFlag --'IBPC'     
+                                                                     = src.SplFlag;
+
+                                    END;
+                                    END IF;
+                                    ---------------------
+                                    -----------Remove------------------------
+                                    -------
+                                    IF ( v_MarkingAlt_Key = 10 ) THEN
+                                     DECLARE
+                                       v_ParameterName VARCHAR2(100);
+
+                                    BEGIN
+                                       MERGE INTO B 
+                                       USING (SELECT B.ROWID row_id, v_Timekey - 1 AS EffectiveToTimeKey
+                                       FROM B ,ExceptionalDegrationDetail_Mod A
+                                              JOIN AccountFlaggingDetails B   ON A.AccountID = B.ACID
+                                              AND B.EffectiveFromTimeKey <= v_timekey
+                                              AND B.EffectiveToTimeKey >= v_Timekey 
+                                        WHERE A.EffectiveFromTimeKey <= v_timekey
+                                         AND A.EffectiveToTimeKey >= v_Timekey
+                                         AND A.Entity_Key = ( SELECT MAX(Entity_Key)  
+                                                              FROM ExceptionalDegrationDetail_Mod 
+                                                               WHERE  AccountID = v_AccountID
+                                                                        AND FlagAlt_Key = v_FlagAlt_Key )
+                                         AND A.MarkingAlt_Key = 10
+                                         AND B.UploadTypeParameterAlt_Key = v_FlagAlt_Key) src
+                                       ON ( B.ROWID = src.row_id )
+                                       WHEN MATCHED THEN UPDATE SET B.EffectiveToTimeKey = src.EffectiveToTimeKey;
+                                       MERGE INTO B 
+                                       USING (SELECT B.ROWID row_id, v_Timekey - 1 AS EffectiveToTimeKey
+                                       FROM B ,ExceptionalDegrationDetail_Mod A
+                                              JOIN ExceptionalDegrationDetail B   ON A.AccountID = B.AccountID
+                                              AND B.EffectiveFromTimeKey <= v_timekey
+                                              AND B.EffectiveToTimeKey >= v_Timekey 
+                                        WHERE A.EffectiveFromTimeKey <= v_timekey
+                                         AND A.EffectiveToTimeKey >= v_Timekey
+                                         AND A.Entity_Key = ( SELECT MAX(Entity_Key)  
+                                                              FROM ExceptionalDegrationDetail_Mod 
+                                                               WHERE  AccountID = v_AccountID
+                                                                        AND FlagAlt_Key = v_FlagAlt_Key )
+                                         AND A.MarkingAlt_Key = 10) src
+                                       ON ( B.ROWID = src.row_id )
+                                       WHEN MATCHED THEN UPDATE SET B.EffectiveToTimeKey = src.EffectiveToTimeKey;
+                                       MERGE INTO B 
+                                       USING (SELECT B.ROWID row_id, v_Timekey - 1 AS EffectiveToTimeKey
+                                       FROM B ,ExceptionalDegrationDetail_Mod A
+                                              JOIN ExceptionFinalStatusType B   ON A.AccountID = B.ACID
+                                              AND B.EffectiveFromTimeKey <= v_timekey
+                                              AND B.EffectiveToTimeKey >= v_Timekey 
+                                        WHERE A.EffectiveFromTimeKey <= v_timekey
+                                         AND A.EffectiveToTimeKey >= v_Timekey
+                                         AND A.Entity_Key = ( SELECT MAX(Entity_Key)  
+                                                              FROM ExceptionalDegrationDetail_Mod 
+                                                               WHERE  AccountID = v_AccountID
+                                                                        AND FlagAlt_Key = v_FlagAlt_Key )
+                                         AND A.MarkingAlt_Key = 10) src
+                                       ON ( B.ROWID = src.row_id )
+                                       WHEN MATCHED THEN UPDATE SET B.EffectiveToTimeKey = src.EffectiveToTimeKey;
+                                       SELECT ParameterName 
+
+                                         INTO v_ParameterName
+                                         FROM DimParameter 
+                                        WHERE  DimParameterName = 'uploadflagtype'
+                                                 AND EffectiveToTimeKey = 49999
+                                                 AND ParameterAlt_Key = ( SELECT DISTINCT FlagAlt_Key 
+                                                                          FROM ExceptionalDegrationDetail_Mod 
+                                                                           WHERE  AccountID = v_AccountID
+                                                                                    AND MarkingAlt_Key = 10
+                                                                                    AND Entity_Key = ( SELECT MAX(Entity_Key)  
+                                                                                                       FROM ExceptionalDegrationDetail_Mod 
+                                                                                                        WHERE  AccountID = v_AccountID
+                                                                                                                 AND FlagAlt_Key = v_FlagAlt_Key ) );
+                                       --Update B Set B.EffectiveToTimeKey=@Timekey-1
+                                       --FROM ExceptionalDegrationDetail_Mod A
+                                       --					inner join ExceptionFinalStatusType B
+                                       --					ON A.AccountID=B.ACID
+                                       --					AND B.EffectiveFromTimeKey <= @timekey
+                                       --					AND B.EffectiveToTimeKey >= @Timekey
+                                       --					WHERE  A.EffectiveFromTimeKey <= @timekey
+                                       --					AND A.EffectiveToTimeKey >= @Timekey
+                                       --					AND A.Entity_Key=(Select max(Entity_Key) From ExceptionalDegrationDetail_Mod where AccountID=@AccountID and FlagAlt_Key=@FlagAlt_Key)
+                                       --					And B.StatusType=@ParameterName
+                                       IF utils.object_id('TempDB..tt_Flags_201') IS NOT NULL THEN
+                                        EXECUTE IMMEDIATE ' TRUNCATE TABLE tt_Flags1_20 ';
+                                       END IF;
+                                       DELETE FROM tt_Flags1_20;
+                                       UTILS.IDENTITY_RESET('tt_Flags1_20');
+
+                                       INSERT INTO tt_Flags1_20 ( 
+                                       	SELECT A.AccountID ,
+                                               B.SplCatShortNameEnum 
+                                       	  FROM ExceptionalDegrationDetail_Mod A
+                                                 JOIN ( SELECT B.ParameterAlt_Key ,
+                                                               A.SplCatShortNameEnum 
+                                                        FROM DimAcSplCategory A
+                                                               JOIN DimParameter B   ON A.SplCatName = B.ParameterName
+                                                               AND B.EffectiveToTimeKey = 49999
+                                                         WHERE  A.SplCatGroup = 'SplFlags'
+                                                                  AND A.EffectiveToTimeKey = 49999
+                                                                  AND B.DimParameterName = 'uploadflagtype' ) B   ON A.FlagAlt_Key = B.ParameterAlt_Key
+                                       	 WHERE  A.EffectiveToTimeKey = 49999
+                                                  AND A.MarkingAlt_Key = 10
+                                                  AND A.Entity_Key = ( SELECT MAX(Entity_Key)  
+                                                                       FROM ExceptionalDegrationDetail_Mod 
+                                                                        WHERE  AccountID = v_AccountID
+                                                                                 AND FlagAlt_Key = v_FlagAlt_Key ) );
+                                       IF utils.object_id('TempDB..tt_Temp_74') IS NOT NULL THEN
+                                        EXECUTE IMMEDIATE ' TRUNCATE TABLE tt_Temp_74 ';
+                                       END IF;
+                                       DELETE FROM tt_Temp_74;
+                                       UTILS.IDENTITY_RESET('tt_Temp_74');
+
+                                       INSERT INTO tt_Temp_74 ( 
+                                       	SELECT A.AccountentityID ,
+                                               A.SplFlag 
+                                       	  FROM CurDat_RBL_MISDB_PROD.AdvAcOtherDetail A
+                                                 JOIN tt_Flags1_20 B   ON A.RefSystemAcId = B.AccountID
+                                       	 WHERE  A.EffectiveToTimeKey = 49999 );
+                                       --Select * from tt_Temp_74
+                                       IF utils.object_id('TEMPDB..tt_SplitValue_22') IS NOT NULL THEN
+                                        EXECUTE IMMEDIATE ' TRUNCATE TABLE tt_SplitValue_22 ';
+                                       END IF;
+                                       DELETE FROM tt_SplitValue_22;
+                                       UTILS.IDENTITY_RESET('tt_SplitValue_22');
+
+                                       INSERT INTO tt_SplitValue_22 ( 
+                                       	SELECT AccountentityID ,
+                                               a_SPLIT.VALUE('.', 'VARCHAR(8000)') Businesscolvalues1  
+                                       	  FROM ( SELECT UTILS.CONVERT_TO_CLOB('<M>' || REPLACE(SplFlag, ',', '</M><M>') || '</M>') Businesscolvalues1  ,
+                                                        AccountentityID 
+                                                 FROM tt_Temp_74  ) A
+                                                  /*TODO:SQLDEV*/ CROSS APPLY Businesscolvalues1.nodes ('/M') AS Split(a) /*END:SQLDEV*/  );
+                                       --Select * from tt_SplitValue_22 
+                                       DELETE tt_SplitValue_22
+
+                                        WHERE  Businesscolvalues1 IN ( SELECT DISTINCT SplCatShortNameEnum 
+                                                                       FROM tt_Flags1_20  )
+                                       ;
+                                       IF utils.object_id('TEMPDB..tt_NEWTRANCHE_65') IS NOT NULL THEN
+                                        EXECUTE IMMEDIATE ' TRUNCATE TABLE tt_NEWTRANCHE_65 ';
+                                       END IF;
+                                       DELETE FROM tt_NEWTRANCHE_65;
+                                       UTILS.IDENTITY_RESET('tt_NEWTRANCHE_65');
+
+                                       INSERT INTO tt_NEWTRANCHE_65 SELECT * 
+                                            FROM ( SELECT ss.AccountEntityID ,
+                                                          utils.stuff(( SELECT ',' || US.BUSINESSCOLVALUES1 
+                                                                        FROM tt_SplitValue_22 US
+                                                                         WHERE  US.AccountentityID = ss.AccountEntityID ), 1, 1, ' ') REPORTIDSLIST  
+                                                   FROM tt_Temp_74 SS
+                                                     GROUP BY ss.AccountEntityID ) B
+                                            ORDER BY 1;
+                                       --Select * from tt_NEWTRANCHE_65
+                                       --SELECT * 
+                                       MERGE INTO A 
+                                       USING (SELECT A.ROWID row_id, B.REPORTIDSLIST
+                                       FROM A ,RBL_MISDB_PROD.AdvAcOtherDetail A
+                                              JOIN tt_NEWTRANCHE_65 B   ON A.AccountentityID = B.AccountentityID 
+                                        WHERE A.EFFECTIVEFROMTIMEKEY <= v_TimeKey
+                                         AND A.EFFECTIVETOTIMEKEY >= v_TimeKey) src
+                                       ON ( A.ROWID = src.row_id )
+                                       WHEN MATCHED THEN UPDATE SET A.SplFlag = src.REPORTIDSLIST;
+
+                                    END;
+                                    END IF;
+                                    IF v_IsSCD2 = 'Y' THEN
+
+                                    BEGIN
+                                       UPDATE ExceptionalDegrationDetail
+                                          SET EffectiveToTimeKey = v_EffectiveFromTimeKey - 1,
+                                              AuthorisationStatus = CASE 
+                                                                         WHEN v_AUTHMODE = 'Y' THEN 'A'
+                                              ELSE NULL
+                                                 END
+                                        WHERE  ( EffectiveFromTimeKey = EffectiveFromTimeKey
+                                         AND EffectiveToTimeKey >= v_TimeKey )
+                                         AND AccountID = v_AccountID
+                                         AND FlagAlt_Key = v_FlagAlt_Key
+                                         AND EffectiveFromTimekey < v_EffectiveFromTimeKey;
+
+                                    END;
+                                    END IF;
+
+                                 END;
+                                 END IF;
+                                 --UPDATE ExceptionFinalStatusType SET
+                                 --	EffectiveToTimeKey=@EffectiveFromTimeKey-1
+                                 --	,AuthorisationStatus =CASE WHEN @AUTHMODE='Y' THEN  'A' ELSE NULL END
+                                 --WHERE (EffectiveFromTimeKey=EffectiveFromTimeKey AND EffectiveToTimeKey>=@TimeKey) 
+                                 --AND Acid=@AccountID  
+                                 --		AND EffectiveFromTimekey<@EffectiveFromTimeKey
+                                 --		and  StatusType=@parameterName_1
+                                 IF v_AUTHMODE = 'N' THEN
+
+                                 BEGIN
+                                    v_AuthorisationStatus := 'A' ;
+                                    --GOTO AdvFacBillDetail_Insert
+                                    GOTO ExceptionalDegrationDetail_Insert;
+                                    <<HistoryRecordInUp>>
+
+                                 END;
+                                 END IF;
+
+                              END;
+                              END IF;
+                           END IF;
+                        END IF;
+                     END IF;
+                  END IF;
+               END IF;
+            END IF;
+         END IF;
+         --/*Adding Flag ----------Farahnaaz 26-03-2021*/
+         --		Declare @variable Varchar(100)=''
+         --Set @variable=(Select Splcatshortnameenum from dimacsplcategory  where splcatgroup='splflags' and 
+         --SplCatName like (select ParameterName from dimparameter
+         --where dimparametername ='UploadFLagType' and ParameterAlt_Key=@FlagAlt_key))
+         --		  UPDATE A
+         --			SET  
+         --				A.SplFlag=CASE WHEN ISNULL(A.SplFlag,'')='' THEN @variable--'IBPC'     
+         --								ELSE A.SplFlag+','+@variable     END
+         --		   FROM DBO.AdvAcOtherDetail A
+         DBMS_OUTPUT.PUT_LINE(6);
+         v_ErrorHandle := 1 ;
+         <<ExceptionalDegrationDetail_Insert>>
+         IF v_ErrorHandle = 0 THEN
+          DECLARE
+            -- ,@D2Ktimestamp
+            v_Parameter3 VARCHAR2(50);
+            v_FinalParameter3 VARCHAR2(50);
+
+         BEGIN
+            INSERT INTO ExceptionalDegrationDetail_Mod --Entity_Key
+
+              ( DegrationAlt_Key, SourceAlt_Key, AccountID, CustomerID, FlagAlt_Key, Date_, MarkingAlt_Key, Amount, AuthorisationStatus, Remark, ChangeFields, EffectiveFromTimeKey, EffectiveToTimeKey, CreatedBy, DateCreated, ModifiedBy, DateModified, ApprovedBy, DateApproved )
+
+              -- ,D2Ktimestamp
+              VALUES ( v_DegrationAlt_Key, v_SourceAlt_Key, v_AccountID, v_CustomerID, v_FlagAlt_Key, v_Date, v_MarkingAlt_Key, v_Amount, v_AuthorisationStatus, v_Remark, 
+            -- ,@ExceptionDegradation_ChangeFields
+            v_ExceptionalDegrationDetail_ChangeFields, v_EffectiveFromTimeKey, v_EffectiveToTimeKey, v_CreatedBy, v_DateCreated, CASE 
+                                                                                                                                      WHEN v_AuthMode = 'Y'
+                                                                                                                                        OR v_IsAvailable = 'Y' THEN v_ModifiedBy
+            ELSE NULL
+               END, CASE 
+                         WHEN v_AuthMode = 'Y'
+                           OR v_IsAvailable = 'Y' THEN v_DateModified
+            ELSE NULL
+               END, CASE 
+                         WHEN v_AuthMode = 'Y' THEN v_ApprovedBy
+            ELSE NULL
+               END, CASE 
+                         WHEN v_AuthMode = 'Y' THEN v_DateApproved
+            ELSE NULL
+               END );
+            SELECT utils.stuff(( SELECT DISTINCT ',' || ChangeFields 
+                                 FROM ExceptionalDegrationDetail_Mod 
+                                  WHERE  AccountID = v_AccountID
+                                           AND FlagAlt_Key = v_FlagAlt_Key
+                                           AND NVL(AuthorisationStatus, 'A') IN ( 'A','MP' )
+                                ), 1, 1, ' ') 
+
+              INTO v_Parameter3
+              FROM DUAL ;
+            IF utils.object_id('tt_AA_20') IS NOT NULL THEN
+             EXECUTE IMMEDIATE ' TRUNCATE TABLE tt_AA_20 ';
+            END IF;
+            DELETE FROM tt_AA_20;
+            UTILS.IDENTITY_RESET('tt_AA_20');
+
+            INSERT INTO tt_AA_20 ( 
+            	SELECT DISTINCT VALUE 
+            	  FROM ( SELECT INSTR(VALUE, '|') CHRIDX  ,
+                             VALUE 
+                      FROM ( SELECT VALUE 
+                             FROM TABLE(STRING_SPLIT(v_Parameter3, ','))  ) A ) X );
+            SELECT utils.stuff(( SELECT DISTINCT ',' || VALUE 
+                                 FROM tt_AA_20  ), 1, 1, ' ') 
+
+              INTO v_FinalParameter3
+              FROM DUAL ;
+            MERGE INTO A 
+            USING (SELECT A.ROWID row_id, v_FinalParameter3
+            FROM A ,ExceptionalDegrationDetail_Mod A 
+             WHERE ( EffectiveFromTimeKey <= v_tiMEKEY
+              AND EffectiveToTimeKey >= v_tiMEKEY )
+              AND AccountID = v_AccountID
+              AND FlagAlt_Key = v_FlagAlt_Key) src
+            ON ( A.ROWID = src.row_id )
+            WHEN MATCHED THEN UPDATE SET a.ChangeFields = v_FinalParameter3;
+            IF v_OperationFlag = 1
+              AND v_AUTHMODE = 'Y' THEN
+
+            BEGIN
+               DBMS_OUTPUT.PUT_LINE(3);
+               GOTO ExceptionalDegrationDetail_Insert_Add;
+
+            END;
+            ELSE
+               IF ( v_OperationFlag = 2
+                 OR v_OperationFlag = 3 )
+                 AND v_AUTHMODE = 'Y' THEN
+
+               BEGIN
+                  GOTO ExceptionalDegrationDetail_Insert_Edit_Delete;
+
+               END;
+               END IF;
+            END IF;
+
+         END;
+         END IF;
+         IF v_OperationFlag IN ( 1,2,3,16,17,18,20,21 )
+
+           AND v_AuthMode = 'Y' THEN
+
+         BEGIN
+            DBMS_OUTPUT.PUT_LINE('log table');
+            v_DateCreated := SYSDATE ;
+            IF v_OperationFlag IN ( 16,17,18,20,21 )
+             THEN
+
+            BEGIN
+               DBMS_OUTPUT.PUT_LINE('Authorised');
+               utils.var_number :=LogDetailsInsertUpdate_Attendence -- MAINTAIN LOG TABLE
+               (v_BranchCode => ' ' ----BranchCode
+                ,
+                v_MenuID => v_MenuID,
+                v_ReferenceID => v_AccountID -- ReferenceID ,
+                ,
+                v_CreatedBy => NULL,
+                v_ApprovedBy => v_CrModApBy,
+                iv_CreatedCheckedDt => v_DateCreated,
+                v_Remark => v_Remark,
+                v_ScreenEntityAlt_Key => 16 ---ScreenEntityId -- for FXT060 screen
+                ,
+                v_Flag => v_OperationFlag,
+                v_AuthMode => v_AuthMode) ;
+
+            END;
+            ELSE
+
+            BEGIN
+               DBMS_OUTPUT.PUT_LINE('UNAuthorised');
+               -- Declare
+               v_CreatedBy := v_CrModApBy ;
+               utils.var_number :=LogDetailsInsertUpdate_Attendence -- MAINTAIN LOG TABLE
+               (v_BranchCode => ' ' ----BranchCode
+                ,
+                v_MenuID => v_MenuID,
+                v_ReferenceID => v_AccountID -- ReferenceID ,
+                ,
+                v_CreatedBy => v_CrModApBy,
+                v_ApprovedBy => NULL,
+                iv_CreatedCheckedDt => v_DateCreated,
+                v_Remark => v_Remark,
+                v_ScreenEntityAlt_Key => 16 ---ScreenEntityId -- for FXT060 screen
+                ,
+                v_Flag => v_OperationFlag,
+                v_AuthMode => v_AuthMode) ;
+
+            END;
+            END IF;
+
+         END;
+         END IF;
+         -------------------
+         DBMS_OUTPUT.PUT_LINE(7);
+         utils.commit_transaction;
+         SELECT UTILS.CONVERT_TO_NUMBER(D2Ktimestamp,10,0) 
+
+           INTO v_D2Ktimestamp
+           FROM RBL_MISDB_PROD.ExceptionalDegrationDetail 
+          WHERE  ( EffectiveFromTimeKey = EffectiveFromTimeKey
+                   AND EffectiveToTimeKey >= v_TimeKey )
+                   AND AccountID = v_AccountID
+                   AND FlagAlt_Key = v_FlagAlt_Key;
+         IF v_OperationFlag = 3 THEN
+
+         BEGIN
+            v_Result := 0 ;
+
+         END;
+         ELSE
+
+         BEGIN
+            v_Result := 1 ;
+
+         END;
+         END IF;
+
+      END;
+   EXCEPTION
+      WHEN OTHERS THEN
+
+   BEGIN
+      ROLLBACK;
+      utils.resetTrancount;
+      OPEN  v_cursor FOR
+         SELECT SQLERRM 
+           FROM DUAL  ;
+         DBMS_SQL.RETURN_RESULT(v_cursor);
+      RETURN -1;---------
+
+   END;END;
+
+EXCEPTION WHEN OTHERS THEN utils.handleerror(SQLCODE,SQLERRM);
+END;
+
+/
+
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "ROLE_LOCAL_RBL_MISDB_PROD_ORACLE";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "QPI_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "ALERT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "DWH_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "MAIN_PRO";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "BS_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "ACL_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "ROLE_LOCAL_RBL_MISDB_PROD_ORACLE";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "PREMOC_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "QPI_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "ALERT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "DWH_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "MAIN_PRO";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "D2KMNTR_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "CURDAT_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "BS_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "ACL_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "ETL_MAIN_RBL_MISDB_PROD";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "DATAUPLOAD_RBL_MISDB_PROD";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "ROLE_ALL_DB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "CC_CDR_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "RBL_BI_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "BSG_READ_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "STD_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "ETL_TEMP_RBL_TEMPDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "RBL_TEMPDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "STG_FIN_RBL_STGDB";
+  GRANT EXECUTE ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "ADF_CDR_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "ROLE_ALL_DB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "CC_CDR_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "RBL_BI_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "BSG_READ_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "STD_FIN_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "ETL_TEMP_RBL_TEMPDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "RBL_TEMPDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "STG_FIN_RBL_STGDB";
+  GRANT DEBUG ON "RBL_MISDB_PROD"."EXCEPTIONALDEGRATIONDETAILINUP_28072023" TO "ADF_CDR_RBL_STGDB";

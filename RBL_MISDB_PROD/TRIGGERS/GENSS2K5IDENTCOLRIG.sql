@@ -1,0 +1,11 @@
+--------------------------------------------------------
+--  DDL for Trigger GENSS2K5IDENTCOLRIG
+--------------------------------------------------------
+
+  CREATE OR REPLACE EDITIONABLE TRIGGER "RBL_MISDB_PROD"."GENSS2K5IDENTCOLRIG" BEFORE
+  INSERT ON STAGE_SS2K5_IDENTITY_COLUMNS FOR EACH ROW BEGIN IF :new.OBJECT_ID_gen IS NULL THEN :new.OBJECT_ID_gen := MD_META.get_next_id;
+END IF;
+END Genss2k5IdentColTrig;
+
+/
+ALTER TRIGGER "RBL_MISDB_PROD"."GENSS2K5IDENTCOLRIG" ENABLE;
